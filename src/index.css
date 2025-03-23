@@ -9,6 +9,12 @@ html body {
   min-height: 100vh;
 }
 
+html.dark body {
+  background:
+    linear-gradient(180deg, #2b2e35, rgba(43, 46, 53, 0.2) 50%, rgba(245, 207, 101, 0.2) 100%),
+    #2b2e35;
+}
+
 @layer base {
   :root {
     /* Light theme variables */
@@ -61,7 +67,7 @@ html body {
 
 /* Remove default styles that might conflict with our theme */
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
   font-synthesis: none;

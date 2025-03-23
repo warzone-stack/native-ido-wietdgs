@@ -3,7 +3,7 @@ import { Dex } from './Dex';
 
 export function Ido() {
   return (
-    <div className='max-w-[560px] min-h-[776px] mx-auto bg-white dark:bg-background-dark rounded-xl p-6 flex flex-col gap-6'>
+    <div className='max-w-[560px] 2xl:max-w-[720px] min-h-[776px] mx-auto bg-white dark:bg-background-dark rounded-xl p-6 flex flex-col gap-6 shadow-[0px_0px_20px_0px_rgba(0,0,0,0.10)] dark:shadow-[0px_0px_20px_0px_rgba(0,0,0,0.10)]'>
       <div className='w-full rounded-xl bg-background-light dark:bg-background-dark p-5 flex flex-col items-start gap-7'>
         {/* Wallet Connect Button */}
         <div className='w-full'>
