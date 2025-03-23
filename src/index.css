@@ -22,8 +22,8 @@ html.dark body {
     --foreground: 0 0% 0%;
 
     /* Brand colors */
-    --primary: 41 89% 68%;
-    --primary-disabled: 41 89% 68% / 0.5;
+    --primary: #f5cf65;
+    --primary-disabled: rgba(245, 207, 101, 0.5);
 
     /* Success colors */
     --success: 160 84% 56%;
@@ -39,8 +39,8 @@ html.dark body {
     --foreground: 0 0% 100%;
 
     /* Brand colors remain the same */
-    --primary: 41 89% 68%;
-    --primary-disabled: 41 89% 68% / 0.5;
+    --primary: #f5cf65;
+    --primary-disabled: rgba(245, 207, 101, 0.5);
 
     /* Success colors */
     --success: 160 94% 44%;
@@ -78,7 +78,7 @@ html.dark body {
 
 /* Custom button styles */
 button {
-  @apply border-transparent px-4 py-2 text-sm font-medium transition-colors;
+  @apply border-transparent rounded-[40px] text-sm font-medium transition-colors;
 }
 
 button:disabled {
@@ -87,7 +87,7 @@ button:disabled {
 
 /* Primary button */
 .btn-primary {
-  @apply bg-primary text-white hover:bg-primary/90;
+  @apply bg-primary text-black hover:bg-primary/90;
 }
 
 /* Success button */
