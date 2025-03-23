@@ -90,6 +90,10 @@ button:disabled {
   @apply bg-primary text-black hover:bg-primary/90;
 }
 
+.btn-bordered {
+  @apply border-solid border border-[#000000] text-[#000000] hover:bg-[#000000]/10;
+}
+
 /* Success button */
 .btn-success {
   @apply bg-success-light dark:bg-success-dark text-white hover:opacity-90;

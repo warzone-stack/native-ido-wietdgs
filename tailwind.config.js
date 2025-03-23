@@ -31,7 +31,7 @@ export default {
           dark: '#212226',
         },
         text: {
-          light: '#000000',
+          light: '#000',
           dark: '#FFFFFF',
         },
       },
