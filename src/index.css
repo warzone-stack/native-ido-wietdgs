@@ -1,0 +1,84 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Light theme variables */
+    --background: 0 0% 100%;
+    --foreground: 0 0% 0%;
+
+    /* Brand colors */
+    --primary: 41 89% 68%;
+    --primary-disabled: 41 89% 68% / 0.5;
+
+    /* Success colors */
+    --success: 160 84% 56%;
+
+    /* Warning colors */
+    --warning-strong: 4 84% 61%;
+    --warning-weak: 32 84% 54%;
+  }
+
+  .dark {
+    /* Dark theme variables */
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+
+    /* Brand colors remain the same */
+    --primary: 41 89% 68%;
+    --primary-disabled: 41 89% 68% / 0.5;
+
+    /* Success colors */
+    --success: 160 94% 44%;
+
+    /* Warning colors */
+    --warning-strong: 4 89% 63%;
+    --warning-weak: 32 99% 58%;
+  }
+}
+
+@layer base {
+  body {
+    @apply bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark;
+  }
+}
+
+/* Remove default styles that might conflict with our theme */
+:root {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom button styles */
+button {
+  @apply rounded-lg border border-transparent px-4 py-2 text-sm font-medium transition-colors;
+}
+
+button:disabled {
+  @apply opacity-50 cursor-not-allowed;
+}
+
+/* Primary button */
+.btn-primary {
+  @apply bg-primary text-white hover:bg-primary/90;
+}
+
+/* Success button */
+.btn-success {
+  @apply bg-success-light dark:bg-success-dark text-white hover:opacity-90;
+}
+
+/* Warning buttons */
+.btn-warning-strong {
+  @apply bg-warning-strong-light dark:bg-warning-strong-dark text-white hover:opacity-90;
+}
+
+.btn-warning-weak {
+  @apply bg-warning-weak-light dark:bg-warning-weak-dark text-white hover:opacity-90;
+}
