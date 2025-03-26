@@ -2,10 +2,8 @@ import { formatUnits } from 'viem';
 import { useContractInfo } from '../hooks/useContractInfo';
 
 export function ContractInfo({
-  offeringTokenAddress,
-  offeringTokenDecimals,
-  offeringTokenSymbol,
-  offeringTokenName,
+  lpToken0,
+  offeringToken,
   startTimestamp,
   endTimestamp,
   minDepositAmount,
@@ -55,7 +53,7 @@ export function ContractInfo({
           <h3 className='text-sm text-gray-500 dark:text-gray-400'>Total Offering</h3>
           <p className='text-lg font-semibold'>
             {totalTokensOffered
-              ? formatUnits(totalTokensOffered, offeringTokenDecimals ?? 18)
+              ? formatUnits(totalTokensOffered, offeringToken?.decimals ?? 18)
               : '0'}{' '}
             STO
           </p>
@@ -68,7 +66,10 @@ export function ContractInfo({
 
       <div className='space-y-2'>
         <p>
-          <strong>Addresses:</strong> {offeringTokenAddress}
+          <strong>LP Token 0:</strong> {lpToken0?.symbol}-{lpToken0?.address}
+        </p>
+        <p>
+          <strong>Offering Token:</strong> {offeringToken?.symbol}-{offeringToken?.address}
         </p>
         <p>
           <strong>Start Timestamp:</strong> {startTimestamp?.toString()}
@@ -78,7 +79,7 @@ export function ContractInfo({
         </p>
         <p>
           <strong>Min Deposit Amount:</strong>{' '}
-          {minDepositAmount ? formatUnits(minDepositAmount, 18) : 'N/A'} ETH
+          {minDepositAmount ? formatUnits(minDepositAmount, lpToken0?.decimals ?? 18) : 'N/A'} ETH
         </p>
         <p>
           <strong>Total Tokens Offered:</strong> {totalTokensOffered?.toString()}
@@ -89,13 +90,26 @@ export function ContractInfo({
         <div className='mt-4'>
           <h3 className='text-lg font-semibold'>Pool 0 Information</h3>
           <div className='space-y-1'>
-            <p>Raising Amount: {formatUnits(poolInfo0.raisingAmountPool, 18)} ETH</p>
-            <p>Offering Amount: {formatUnits(poolInfo0.offeringAmountPool, 18)}</p>
-            <p>Cap Per User: {formatUnits(poolInfo0.capPerUserInLP, 18)} ETH</p>
+            <p>
+              Raising Amount: {formatUnits(poolInfo0.raisingAmountPool, lpToken0?.decimals ?? 18)}{' '}
+              ETH
+            </p>
+            <p>
+              Offering Amount:{' '}
+              {formatUnits(poolInfo0.offeringAmountPool, offeringToken?.decimals ?? 18)}
+            </p>
+            <p>
+              Cap Per User: {formatUnits(poolInfo0.capPerUserInLP, lpToken0?.decimals ?? 18)} ETH
+            </p>
             <p>Has Tax: {poolInfo0.hasTax ? 'Yes' : 'No'}</p>
-            <p>Flat Tax Rate: {formatUnits(poolInfo0.flatTaxRate, 18)}</p>
-            <p>Total Amount: {formatUnits(poolInfo0.totalAmountPool, 18)} ETH</p>
-            <p>Sum Taxes Overflow: {formatUnits(poolInfo0.sumTaxesOverflow, 18)} ETH</p>
+            <p>Flat Tax Rate: {formatUnits(poolInfo0.flatTaxRate, lpToken0?.decimals ?? 18)}</p>
+            <p>
+              Total Amount: {formatUnits(poolInfo0.totalAmountPool, lpToken0?.decimals ?? 18)} ETH
+            </p>
+            <p>
+              Sum Taxes Overflow:{' '}
+              {formatUnits(poolInfo0.sumTaxesOverflow, lpToken0?.decimals ?? 18)} ETH
+            </p>
           </div>
         </div>
       )}

@@ -1,5 +1,6 @@
-import { useReadContracts } from 'wagmi';
-import { ERC20_ABI, idoContract } from '../config/contracts';
+import { useChainId, useReadContracts } from 'wagmi';
+import { idoContract } from '../config/contracts';
+import { useTokenInfo } from './useTokenInfo';
 
 export type PoolInfo = {
   raisingAmountPool: bigint;
@@ -14,8 +15,19 @@ export type PoolInfo = {
 export type IDOStatus = 'not_started' | 'in_progress' | 'ended';
 
 export function useContractInfo() {
+  const chainId = useChainId();
+
   const { data } = useReadContracts({
     contracts: [
+      {
+        ...idoContract,
+        functionName: 'addresses',
+        // [0] lpToken0
+        // [1] lpToken1
+        // [2] offeringToken
+        // [3] adminAddress
+        args: [0n],
+      },
       {
         ...idoContract,
         functionName: 'addresses',
@@ -52,6 +64,7 @@ export function useContractInfo() {
   });
 
   const [
+    lpToken0AddressResult,
     offeringTokenAddressResult,
     startTimestampResult,
     endTimestampResult,
@@ -60,10 +73,8 @@ export function useContractInfo() {
     poolInfo0Result,
   ] = data || [];
 
-  console.log(data);
-  console.log(offeringTokenAddressResult);
-
-  // Extract successful results with proper type assertions
+  const lpToken0Address =
+    lpToken0AddressResult?.status === 'success' ? lpToken0AddressResult.result : undefined;
   const offeringTokenAddress =
     offeringTokenAddressResult?.status === 'success'
       ? offeringTokenAddressResult.result
@@ -109,42 +120,12 @@ export function useContractInfo() {
     return 'in_progress';
   })();
 
-  const { data: offeringTokenData } = useReadContracts({
-    contracts: [
-      {
-        address: offeringTokenAddress,
-        abi: ERC20_ABI,
-        functionName: 'decimals',
-      },
-      {
-        address: offeringTokenAddress,
-        abi: ERC20_ABI,
-        functionName: 'symbol',
-      },
-      {
-        address: offeringTokenAddress,
-        abi: ERC20_ABI,
-        functionName: 'name',
-      },
-    ],
-  });
-
-  const offeringTokenDecimals =
-    offeringTokenData?.[0]?.status === 'success' ? offeringTokenData[0].result : undefined;
-  const offeringTokenSymbol =
-    offeringTokenData?.[1]?.status === 'success' ? offeringTokenData[1].result : undefined;
-  const offeringTokenName =
-    offeringTokenData?.[2]?.status === 'success' ? offeringTokenData[2].result : undefined;
-
-  console.log(offeringTokenDecimals);
-  console.log(offeringTokenSymbol);
-  console.log(offeringTokenName);
+  const { tokenInfo: offeringToken } = useTokenInfo(offeringTokenAddress, chainId);
+  const { tokenInfo: lpToken0 } = useTokenInfo(lpToken0Address, chainId);
 
   return {
-    offeringTokenAddress,
-    offeringTokenDecimals,
-    offeringTokenSymbol,
-    offeringTokenName,
+    lpToken0,
+    offeringToken,
     startTimestamp,
     endTimestamp,
     minDepositAmount,

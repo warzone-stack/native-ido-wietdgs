@@ -37,8 +37,8 @@ export function Header() {
                     xmlns='http://www.w3.org/2000/svg'
                   >
                     <path
-                      fill-rule='evenodd'
-                      clip-rule='evenodd'
+                      fillRule='evenodd'
+                      clipRule='evenodd'
                       d='M6 8.80002C4.89543 8.80002 4 9.69545 4 10.8V18C4 19.1046 4.89543 20 6 20H18C19.1046 20 20 19.1046 20 18V10.8C20 9.69545 19.1046 8.80002 18 8.80002H6ZM15.1998 12.8C14.3162 12.8 13.5998 13.5163 13.5998 14.4C13.5998 15.2836 14.3162 16 15.1998 16H19.9998V12.8H15.1998Z'
                       fill='currentColor'
                     />

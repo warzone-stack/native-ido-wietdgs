@@ -6,7 +6,6 @@ export function ChainSwitcher() {
   const chainId = useChainId();
   const { switchChain } = useSwitchChain();
 
-  console.log(chainId, CHAIN_ID);
   if (chainId === CHAIN_ID) {
     return null;
   }
