@@ -3,6 +3,7 @@ import { http } from 'wagmi';
 import { bsc, mainnet, sepolia } from '@wagmi/core/chains';
 import { fallback, unstable_connector } from '@wagmi/core';
 import { injected } from '@wagmi/connectors';
+import { okxWallet } from '@rainbow-me/rainbowkit/wallets';
 
 /**
  * https://www.rainbowkit.com/guides/rainbowkit-wagmi-v2
@@ -21,6 +22,13 @@ export const config = getDefaultConfig({
       http('https://sepolia.infura.io/v3/7358883bfd5b44dd9d03c50d373e8b6f'),
     ]),
   },
+  multiInjectedProviderDiscovery: !import.meta.env.PROD,
+  wallets: [
+    {
+      groupName: 'Recommended',
+      wallets: [okxWallet],
+    },
+  ],
 });
 
 export enum ChainId {
