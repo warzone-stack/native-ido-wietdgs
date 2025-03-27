@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from 'next-themes';
 import { useState } from 'react';
 import { WagmiProvider } from 'wagmi';
+import { ClaimForm } from './ClaimForm';
 import { ChainSwitcher } from './components/ChainSwitcher';
 import { ConnectOKXButton } from './components/ConnectButton';
 import { Countdown } from './components/Countdown';
@@ -43,71 +44,74 @@ function AppContent() {
           ) : (
             <>
               <div className='w-full min-h-[120px] rounded-lg bg-[--primary] opacity-20 p-5 flex flex-col items-start gap-7'>
-                {CHAIN_ID}-{IDO_CONTRACT_ADDRESS}
+                <p>{CHAIN_ID}</p>
+                <p className='break-all'>{IDO_CONTRACT_ADDRESS}</p>
               </div>
 
               <ChainSwitcher />
 
-              {contractInfo.endTimestamp && (
-                <Countdown endTime={new Date(Number(contractInfo.endTimestamp) * 1000)} />
+              {contractInfo.status === 'ended' ? (
+                <div className='flex items-center justify-center gap-1 text-base font-semibold'>
+                  <div className='py-2 px-4 rounded-[40px] bg-[#0000001A] dark:bg-background-dark'>
+                    Finished
+                  </div>
+                </div>
+              ) : contractInfo.status === 'in_progress' ? (
+                contractInfo.endTimestamp && (
+                  <Countdown
+                    endTime={new Date(Number(contractInfo.endTimestamp) * 1000)}
+                    title='Finishing in：'
+                  />
+                )
+              ) : (
+                contractInfo.startTimestamp && (
+                  <Countdown
+                    endTime={new Date(Number(contractInfo.startTimestamp) * 1000)}
+                    title='Starting in：'
+                  />
+                )
               )}
 
               {contractInfo.status === 'not_started' && <ConnectOKXButton isOKX={isOKX} />}
 
-              {contractInfo.status === 'in_progress' && (
+              {(contractInfo.status === 'in_progress' || contractInfo.status === 'ended') && (
                 <div className='flex flex-col gap-5 items-stretch p-5 rounded-lg border border-[#0000001A] dark:border-gray-800'>
                   <div className='opacity-50'>
-                    Deposit {contractInfo.lpToken0?.symbol ?? '-'} to Participate
+                    {contractInfo.status === 'ended' ? (
+                      'Claim Purchased Tokens'
+                    ) : (
+                      <>Deposit {contractInfo.lpToken0?.symbol ?? '-'} to Participate</>
+                    )}
                   </div>
                   <ConnectOKXButton isOKX={isOKX} />
-                  <div className='flex flex-col gap-[10px] items-stretch'>
-                    <div className='text-sm font-medium opacity-50'>Deposited</div>
-                    <div className='flex items-center justify-between'>
-                      <div className='flex items-center gap-[10px]'>
-                        <TokenLogo address={contractInfo.lpToken0?.address} />
-                        <div className='text-2xl font-semibold'>
-                          {formatTokenAmount(
-                            contractInfo.userInfo?.amountPool,
-                            contractInfo.lpToken0?.decimals
-                          )}
-                          &nbsp;{contractInfo.lpToken0?.symbol ?? ''}
+                  {contractInfo.status === 'ended' ? null : (
+                    <div className='flex flex-col gap-[10px] items-stretch'>
+                      <div className='text-sm font-medium opacity-50'>Deposited</div>
+                      <div className='flex items-center justify-between'>
+                        <div className='flex items-center gap-[10px]'>
+                          <TokenLogo token={contractInfo.lpToken0} />
+                          <div className='text-2xl font-semibold'>
+                            {formatTokenAmount(
+                              contractInfo.userInfo?.amountPool,
+                              contractInfo.lpToken0?.decimals
+                            )}
+                            &nbsp;{contractInfo.lpToken0?.symbol ?? ''}
+                          </div>
                         </div>
-                      </div>
 
-                      <button
-                        onClick={() => setIsDepositing(true)}
-                        className='min-h-12 min-w-[160px] btn-primary text-base font-semibold px-12'
-                        disabled={!isOKX}
-                      >
-                        Deposit
-                      </button>
-                    </div>
-                  </div>
-                  <div className='flex flex-col gap-[10px] items-stretch'>
-                    <div className='text-sm font-medium opacity-50'>Receiving</div>
-                    <div className='flex items-center justify-between'>
-                      <div className='flex items-center gap-[10px]'>
-                        <TokenLogo address={contractInfo.offeringToken?.address} />
-                        <div className='text-2xl font-semibold'>
-                          {formatTokenAmount(
-                            contractInfo.userInfo?.userOfferingAmountPool,
-                            contractInfo.offeringToken?.decimals
-                          )}
-                          &nbsp;{contractInfo.offeringToken?.symbol ?? ''}
-                        </div>
+                        <button
+                          onClick={() => setIsDepositing(true)}
+                          className='min-h-12 min-w-[160px] btn-primary text-base font-semibold px-12'
+                          disabled={!isOKX}
+                        >
+                          Deposit
+                        </button>
                       </div>
-
-                      <button
-                        onClick={() => {
-                          //
-                        }}
-                        className='min-h-12 min-w-[160px] btn-bordered text-base font-semibold px-12'
-                        disabled
-                      >
-                        Claim
-                      </button>
                     </div>
-                  </div>
+                  )}
+
+                  <ClaimForm contractInfo={contractInfo} />
+
                   <div className='flex flex-col gap-3 items-stretch'>
                     <div className='flex items-center justify-between'>
                       <div className='text-sm font-medium opacity-50'>Total Offering</div>
@@ -226,60 +230,87 @@ function AppContent() {
                 </div>
               )}
 
-              {contractInfo.status === 'ended' && (
+              {contractInfo.status === 'ended' ? null : (
                 <div className='flex flex-col gap-4 items-stretch p-5 rounded-lg border border-[#0000001A] dark:border-gray-800'>
                   <div className='opacity-50'>Total Offering</div>
                   <div className='flex gap-1 gap-[10px] items-center'>
-                    <TokenLogo address={contractInfo.offeringToken?.address} />
+                    <TokenLogo token={contractInfo.offeringToken} />
+                    <div className='text-3xl font-semibold'>
+                      {!isOKX
+                        ? '???'
+                        : contractInfo.totalTokensOffered && contractInfo.offeringToken
+                          ? formatTokenAmount(
+                              contractInfo.totalTokensOffered,
+                              contractInfo.offeringToken.decimals,
+                              true
+                            )
+                          : '-'}
+                      &nbsp;
+                      {contractInfo.offeringToken?.symbol ?? ''}
+                    </div>
+                  </div>
+                  <div className='flex items-center justify-between'>
+                    <h3 className='text-sm opacity-50'>Sale Duration</h3>
+                    <p className='text-base font-medium'>
+                      {saleDuration ? `${saleDuration} hours` : 'N/A'}
+                    </p>
                   </div>
                 </div>
               )}
 
-              <div className='flex flex-col gap-4 items-stretch p-5 rounded-lg border border-[#0000001A] dark:border-gray-800'>
-                <div className='opacity-50'>Total Offering</div>
-                <div className='flex gap-1 gap-[10px] items-center'>
-                  <TokenLogo address={contractInfo.offeringToken?.address} />
-                  <div className='text-3xl font-semibold'>
-                    {!isOKX
-                      ? '???'
-                      : contractInfo.totalTokensOffered && contractInfo.offeringToken
-                        ? formatTokenAmount(
-                            contractInfo.totalTokensOffered,
-                            contractInfo.offeringToken.decimals,
-                            true
-                          )
-                        : '-'}
-                    &nbsp;
-                    {contractInfo.offeringToken?.symbol ?? ''}
-                  </div>
-                </div>
-                <div className='flex items-center justify-between'>
-                  <h3 className='text-sm opacity-50'>Sale Duration</h3>
-                  <p className='text-base font-medium'>
-                    {saleDuration ? `${saleDuration} hours` : 'N/A'}
-                  </p>
-                </div>
-              </div>
-
               <div className='flex flex-col gap-5 items-stretch p-5 rounded-lg border border-[#0000001A] dark:border-gray-800'>
-                <div className='flex items-center gap-2'>
-                  <button
-                    onClick={() => {
-                      //
-                    }}
-                    className='w-full min-h-14 btn-primary font-semibold'
-                  >
-                    How to Participate
-                  </button>
-                  <button
-                    onClick={() => {
-                      //
-                    }}
-                    className='w-full min-h-14 btn-bordered text-base font-semibold'
-                  >
-                    Campaign Details
-                  </button>
-                </div>
+                {contractInfo.status === 'ended' ? (
+                  <div className='flex items-center gap-2'>
+                    <button
+                      onClick={() => {
+                        window.open(
+                          `https://pancakeswap.finance/add/${contractInfo.lpToken0?.address}/${contractInfo.offeringToken?.address}`,
+                          '_blank'
+                        );
+                      }}
+                      className='w-full basis-128 min-h-14 btn-primary font-semibold'
+                    >
+                      Add Liquidity
+                    </button>
+                    <button
+                      onClick={() => {
+                        window.open(
+                          `https://www.okx.com/dex/trade?inputCurrency=${contractInfo.lpToken0?.address}&outputCurrency=${contractInfo.offeringToken?.address}`,
+                          '_blank'
+                        );
+                      }}
+                      className='w-full basis-64 min-h-14 btn-bordered text-base font-semibold'
+                    >
+                      Trade {contractInfo.offeringToken?.symbol ?? ''}
+                    </button>
+                  </div>
+                ) : (
+                  <div className='flex items-center gap-2'>
+                    <button
+                      onClick={() => {
+                        window.open(
+                          `https://pancakeswap.finance/add/${contractInfo.lpToken0?.address}/${contractInfo.offeringToken?.address}`,
+                          '_blank'
+                        );
+                      }}
+                      className='w-full min-h-14 btn-primary font-semibold'
+                    >
+                      How to Participate
+                    </button>
+                    <button
+                      onClick={() => {
+                        window.open(
+                          `https://pancakeswap.finance/swap?inputCurrency=${contractInfo.lpToken0?.address}&outputCurrency=${contractInfo.offeringToken?.address}`,
+                          '_blank'
+                        );
+                      }}
+                      className='w-full min-h-14 btn-bordered text-base font-semibold'
+                    >
+                      Campaign Details
+                    </button>
+                  </div>
+                )}
+
                 <div className='text-xs opacity-50'>
                   <p>
                     Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem

@@ -15,7 +15,7 @@ export const config = getDefaultConfig({
   chains: [sepolia, bsc],
   // connectors: [injected()],
   transports: {
-    [bsc.id]: http(),
+    [bsc.id]: fallback([unstable_connector(injected), http('https://bsc-dataseed.binance.org')]),
     [sepolia.id]: fallback([
       unstable_connector(injected),
       http('https://sepolia.infura.io/v3/7358883bfd5b44dd9d03c50d373e8b6f'),

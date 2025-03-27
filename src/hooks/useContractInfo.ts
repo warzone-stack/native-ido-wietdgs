@@ -21,7 +21,7 @@ export type IDOStatus = 'not_started' | 'in_progress' | 'ended';
 
 export function useContractInfo() {
   const chainId = useChainId();
-  const account = useAccount();
+  const { address } = useAccount();
 
   const { data, refetch: refetchPoolInfo } = useReadContracts({
     contracts: [
@@ -74,12 +74,12 @@ export function useContractInfo() {
       {
         ...idoContract,
         functionName: 'viewUserInfo',
-        args: account.address ? [account.address, [0]] : undefined,
+        args: address ? [address, [0]] : undefined,
       },
       {
         ...idoContract,
         functionName: 'viewUserOfferingAndRefundingAmountsForPools',
-        args: account.address ? [account.address, [0]] : undefined,
+        args: address ? [address, [0]] : undefined,
       },
     ],
   });
@@ -126,25 +126,25 @@ export function useContractInfo() {
     useCryptoPrice(offeringToken);
 
   const nativeBalanceData = useBalance({
-    address: account.address,
+    address,
   });
 
   const { data: userBalanceData, refetch: refetchUserBalance } = useReadContracts({
     contracts:
-      !lpToken0 || !account.address || isNativeToken(lpToken0)
+      !lpToken0 || !address || isNativeToken(lpToken0)
         ? undefined
         : [
             {
               address: lpToken0.address,
               abi: erc20Abi,
               functionName: 'balanceOf',
-              args: [account.address],
+              args: [address],
             },
             {
               address: lpToken0.address,
               abi: erc20Abi,
               functionName: 'allowance',
-              args: idoContract.address ? [account.address, idoContract.address] : undefined,
+              args: idoContract.address ? [address, idoContract.address] : undefined,
             },
           ],
   });

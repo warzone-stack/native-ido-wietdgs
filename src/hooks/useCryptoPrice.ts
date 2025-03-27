@@ -61,7 +61,7 @@ export function useCryptoPrice(token: TokenInfo | undefined) {
     enabled: !!token?.chainId && !!token?.address,
     queryFn: async () => {
       if (!token) {
-        return undefined;
+        return null;
       }
 
       if (token.chainId === ChainId.SEPOLIA) {
@@ -78,7 +78,7 @@ export function useCryptoPrice(token: TokenInfo | undefined) {
 
       const id = isNativeToken(token)
         ? ASSET_PLATFORMS[token.chainId].native_coin_id
-        : token.address;
+        : token.address.toLowerCase();
 
       const commonUrl = `https://api.coingecko.com/api/v3/simple/token_price/${ASSET_PLATFORMS[token.chainId].id}?contract_addresses=${id}&vs_currencies=usd`;
 
@@ -90,7 +90,7 @@ export function useCryptoPrice(token: TokenInfo | undefined) {
       if (json[id]?.usd) {
         return new BigNumber(json[id].usd as number);
       }
-      return undefined;
+      return null;
     },
   });
 

@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 
 interface CountdownProps {
+  title: string;
   endTime: Date;
 }
 
-export function Countdown({ endTime }: CountdownProps) {
+export function Countdown({ title, endTime }: CountdownProps) {
   const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0 });
 
   useEffect(() => {
@@ -35,7 +36,7 @@ export function Countdown({ endTime }: CountdownProps) {
 
   return (
     <div className='flex items-center justify-center gap-1 text-base font-semibold'>
-      <div>Finishing in：</div>
+      <div>{title}</div>
       <div className='p-2 rounded-sm bg-[#0000001A] dark:bg-background-dark'>
         {String(timeLeft.hours).padStart(2, '0')}
       </div>

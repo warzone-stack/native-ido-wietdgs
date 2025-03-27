@@ -222,7 +222,7 @@ export const DepositForm = ({ contractInfo, setIsDepositing }: DepositFormProps)
                 type='number'
                 value={depositAmount}
                 onChange={(e) => setDepositAmount(e.target.value)}
-                className='text-3xl font-semibold bg-transparent outline-none max-w-[350px] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none'
+                className='text-3xl font-semibold bg-transparent outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none max-w-[200px] md:max-w-[350px]'
                 placeholder='0.00'
                 min='0'
                 step='any'
@@ -230,7 +230,7 @@ export const DepositForm = ({ contractInfo, setIsDepositing }: DepositFormProps)
             </div>
             <div className='flex flex-col items-end gap-[10px]'>
               <div className='flex items-center gap-2 p-2 rounded-sm bg-[#0000001A] dark:bg-background-dark'>
-                <TokenLogo address={contractInfo.lpToken0?.address} size={24} />
+                <TokenLogo token={contractInfo.lpToken0} size={24} />
                 <div className='text-base font-semibold'>{contractInfo.lpToken0?.symbol ?? ''}</div>
               </div>
             </div>

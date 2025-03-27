@@ -1,11 +1,11 @@
-import { sepolia } from 'wagmi/chains';
+import { bsc, sepolia } from 'wagmi/chains';
 
 // export const IDO_CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS as `0x${string}`;
 export const IDO_CONTRACT_ADDRESS = import.meta.env.PROD
   ? (import.meta.env.VITE_CONTRACT_ADDRESS as `0x${string}`)
-  : '0x628DE413B95aB5a59E6b447584b71727C4E26F47';
+  : '0xd43B9CAFe6c945aF42825046d68707CDAF1Fda55';
 
-export const CHAIN_ID = import.meta.env.PROD ? Number(import.meta.env.VITE_CHAIN_ID) : sepolia.id;
+export const CHAIN_ID = import.meta.env.PROD ? Number(import.meta.env.VITE_CHAIN_ID) : bsc.id;
 
 export const IDO_ABI = [
   { inputs: [], stateMutability: 'nonpayable', type: 'constructor' },
