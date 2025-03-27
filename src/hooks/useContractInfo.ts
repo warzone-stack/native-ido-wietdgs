@@ -1,5 +1,10 @@
-import { useChainId, useReadContracts } from 'wagmi';
+import BigNumber from 'bignumber.js';
+import { useMemo } from 'react';
+import { erc20Abi } from 'viem';
+import { useAccount, useBalance, useChainId, useReadContracts } from 'wagmi';
 import { idoContract } from '../config/contracts';
+import { isNativeToken } from '../config/token';
+import { useCryptoPrice } from './useCryptoPrice';
 import { useTokenInfo } from './useTokenInfo';
 
 export type PoolInfo = {
@@ -16,8 +21,9 @@ export type IDOStatus = 'not_started' | 'in_progress' | 'ended';
 
 export function useContractInfo() {
   const chainId = useChainId();
+  const account = useAccount();
 
-  const { data } = useReadContracts({
+  const { data, refetch: refetchPoolInfo } = useReadContracts({
     contracts: [
       {
         ...idoContract,
@@ -63,6 +69,21 @@ export function useContractInfo() {
     ],
   });
 
+  const { data: userInfoData, refetch: refetchUserInfo } = useReadContracts({
+    contracts: [
+      {
+        ...idoContract,
+        functionName: 'viewUserInfo',
+        args: account.address ? [account.address, [0]] : undefined,
+      },
+      {
+        ...idoContract,
+        functionName: 'viewUserOfferingAndRefundingAmountsForPools',
+        args: account.address ? [account.address, [0]] : undefined,
+      },
+    ],
+  });
+
   const [
     lpToken0AddressResult,
     offeringTokenAddressResult,
@@ -83,29 +104,6 @@ export function useContractInfo() {
     startTimestampResult?.status === 'success' ? startTimestampResult.result : undefined;
   const endTimestamp =
     endTimestampResult?.status === 'success' ? endTimestampResult.result : undefined;
-  /**
-   * uint256 - the minimum commit amount for given pool, should always be 1000000 . Should block user commit/deposit when trying to commit less than this number.
-   */
-  const minDepositAmount =
-    minDepositAmountsResult?.status === 'success'
-      ? (minDepositAmountsResult.result as unknown as bigint)
-      : undefined;
-  const totalTokensOffered =
-    totalTokensOfferedResult?.status === 'success' ? totalTokensOfferedResult.result : undefined;
-
-  // Transform pool information results into PoolInfo type
-  const poolInfo0 =
-    poolInfo0Result?.status === 'success'
-      ? {
-          raisingAmountPool: poolInfo0Result.result[0] as bigint,
-          offeringAmountPool: poolInfo0Result.result[1] as bigint,
-          capPerUserInLP: poolInfo0Result.result[2] as bigint,
-          hasTax: poolInfo0Result.result[3] as boolean,
-          flatTaxRate: poolInfo0Result.result[4] as bigint,
-          totalAmountPool: poolInfo0Result.result[5] as bigint,
-          sumTaxesOverflow: poolInfo0Result.result[6] as bigint,
-        }
-      : undefined;
 
   // Calculate IDO status based on timestamps
   const status: IDOStatus = (() => {
@@ -120,17 +118,185 @@ export function useContractInfo() {
     return 'in_progress';
   })();
 
-  const { tokenInfo: offeringToken } = useTokenInfo(offeringTokenAddress, chainId);
   const { tokenInfo: lpToken0 } = useTokenInfo(lpToken0Address, chainId);
+  const { tokenInfo: offeringToken } = useTokenInfo(offeringTokenAddress, chainId);
+
+  const { data: lpToken0USD, isLoading: lpToken0USDLoading } = useCryptoPrice(lpToken0);
+  const { data: offeringTokenUSD, isLoading: offeringTokenUSDLoading } =
+    useCryptoPrice(offeringToken);
+
+  const nativeBalanceData = useBalance({
+    address: account.address,
+  });
+
+  const { data: userBalanceData, refetch: refetchUserBalance } = useReadContracts({
+    contracts:
+      !lpToken0 || !account.address || isNativeToken(lpToken0)
+        ? undefined
+        : [
+            {
+              address: lpToken0.address,
+              abi: erc20Abi,
+              functionName: 'balanceOf',
+              args: [account.address],
+            },
+            {
+              address: lpToken0.address,
+              abi: erc20Abi,
+              functionName: 'allowance',
+              args: idoContract.address ? [account.address, idoContract.address] : undefined,
+            },
+          ],
+  });
+
+  const [minDepositAmount, totalTokensOffered, poolInfo0] = useMemo(() => {
+    const minDepositAmount =
+      minDepositAmountsResult?.status === 'success' && lpToken0
+        ? new BigNumber(minDepositAmountsResult.result.toString()).div(
+            new BigNumber(10).pow(lpToken0?.decimals)
+          )
+        : undefined;
+    const totalTokensOffered =
+      totalTokensOfferedResult?.status === 'success' && offeringToken
+        ? new BigNumber(totalTokensOfferedResult.result.toString()).div(
+            new BigNumber(10).pow(offeringToken?.decimals)
+          )
+        : undefined;
+
+    // Transform pool information results into PoolInfo type
+    const poolInfo0 =
+      poolInfo0Result?.status === 'success'
+        ? {
+            raisingAmountPool: lpToken0
+              ? new BigNumber(poolInfo0Result.result[0].toString()).div(
+                  new BigNumber(10).pow(lpToken0?.decimals)
+                )
+              : undefined,
+            offeringAmountPool: offeringToken
+              ? new BigNumber(poolInfo0Result.result[1].toString()).div(
+                  new BigNumber(10).pow(offeringToken?.decimals)
+                )
+              : undefined,
+            capPerUserInLP: lpToken0
+              ? new BigNumber(poolInfo0Result.result[2].toString()).div(
+                  new BigNumber(10).pow(lpToken0?.decimals)
+                )
+              : undefined,
+            hasTax: poolInfo0Result.result[3] as boolean,
+            flatTaxRate: new BigNumber(poolInfo0Result.result[4].toString()),
+            totalAmountPool: lpToken0
+              ? new BigNumber(poolInfo0Result.result[5].toString()).div(
+                  new BigNumber(10).pow(lpToken0?.decimals)
+                )
+              : undefined,
+            sumTaxesOverflow: new BigNumber(poolInfo0Result.result[6].toString()),
+          }
+        : undefined;
+
+    return [minDepositAmount, totalTokensOffered, poolInfo0];
+  }, [
+    lpToken0,
+    minDepositAmountsResult?.result,
+    minDepositAmountsResult?.status,
+    offeringToken,
+    poolInfo0Result?.result,
+    poolInfo0Result?.status,
+    totalTokensOfferedResult?.result,
+    totalTokensOfferedResult?.status,
+  ]);
+
+  const userInfo = useMemo(() => {
+    if (!userInfoData) {
+      return null;
+    }
+    const [userInfoResult, userOfferingAndRefundingAmountsResult] = userInfoData;
+    if (
+      userInfoResult.status !== 'success' ||
+      userOfferingAndRefundingAmountsResult.status !== 'success'
+    ) {
+      return null;
+    }
+    const [userInfo, userOfferingAndRefundingAmounts] = [
+      userInfoResult.result,
+      userOfferingAndRefundingAmountsResult.result,
+    ];
+
+    const amountPool = userInfo[0][0];
+    const claimedPool = userInfo[1][0];
+
+    const userOfferingAmountPool = userOfferingAndRefundingAmounts[0][0];
+    const userRefundingAmountPool = userOfferingAndRefundingAmounts[0][1];
+    const userTaxAmountPool = userOfferingAndRefundingAmounts[0][2];
+
+    return {
+      amountPool: lpToken0
+        ? new BigNumber(amountPool.toString()).div(new BigNumber(10).pow(lpToken0?.decimals))
+        : undefined,
+      claimedPool,
+      userOfferingAmountPool: offeringToken
+        ? new BigNumber(userOfferingAmountPool.toString()).div(
+            new BigNumber(10).pow(offeringToken?.decimals)
+          )
+        : undefined,
+      userRefundingAmountPool: lpToken0
+        ? new BigNumber(userRefundingAmountPool.toString()).div(
+            new BigNumber(10).pow(lpToken0?.decimals)
+          )
+        : undefined,
+      userTaxAmountPool: lpToken0
+        ? new BigNumber(userTaxAmountPool.toString()).div(new BigNumber(10).pow(lpToken0?.decimals))
+        : undefined,
+    };
+  }, [lpToken0, offeringToken, userInfoData]);
+
+  const { balance: lpToken0Balance, allowance: lpToken0Allowance } = useMemo(() => {
+    if (!lpToken0) {
+      return { balance: undefined, allowance: undefined };
+    }
+    if (isNativeToken(lpToken0)) {
+      return {
+        balance: nativeBalanceData.data
+          ? new BigNumber(nativeBalanceData.data.value.toString()).div(
+              new BigNumber(10).pow(lpToken0.decimals)
+            )
+          : undefined,
+        allowance: undefined,
+      };
+    }
+    if (!userBalanceData) {
+      return { balance: undefined, allowance: undefined };
+    }
+    const [userBalanceResult, userAllowanceResult] = userBalanceData;
+    if (userBalanceResult.status !== 'success' || userAllowanceResult.status !== 'success') {
+      return { balance: undefined, allowance: undefined };
+    }
+    const [userBalance, userAllowance] = [userBalanceResult.result, userAllowanceResult.result];
+    return {
+      balance: new BigNumber(userBalance.toString()).div(new BigNumber(10).pow(lpToken0.decimals)),
+      allowance: new BigNumber(userAllowance.toString()).div(
+        new BigNumber(10).pow(lpToken0.decimals)
+      ),
+    };
+  }, [nativeBalanceData, userBalanceData, lpToken0]);
 
   return {
     lpToken0,
+    lpToken0USD,
+    lpToken0USDLoading,
     offeringToken,
+    offeringTokenUSD,
+    offeringTokenUSDLoading,
     startTimestamp,
     endTimestamp,
     minDepositAmount,
     totalTokensOffered,
     poolInfo0,
     status,
+    userInfo,
+    lpToken0Balance,
+    lpToken0Allowance,
+    refetchPoolInfo,
+    refetchUserInfo,
+    refetchUserBalance,
   };
 }

@@ -1,14 +1,13 @@
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import '@rainbow-me/rainbowkit/styles.css';
 import { useDisconnect } from 'wagmi';
-import { isOKXWallet } from '../config/web3';
 
-export interface ConnectButtonProps {}
+export interface ConnectButtonProps {
+  isOKX?: boolean;
+}
 
-export const ConnectOKXButton = (props: ConnectButtonProps) => {
+export const ConnectOKXButton = ({ isOKX }: ConnectButtonProps) => {
   const { disconnect } = useDisconnect();
-
-  const isOKX = isOKXWallet();
 
   return (
     <ConnectButton.Custom>
@@ -51,7 +50,7 @@ export const ConnectOKXButton = (props: ConnectButtonProps) => {
                       href='https://www.okx.com/web3'
                       target='_blank'
                       rel='noopener noreferrer'
-                      className='hover:underline font-bold'
+                      className='underline font-bold hover:text-primary'
                     >
                       Get OKX Wallet
                     </a>

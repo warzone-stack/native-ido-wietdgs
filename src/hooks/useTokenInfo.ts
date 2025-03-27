@@ -6,7 +6,6 @@ import { ChainId } from '../config/wagmi';
 import { TokenInfo } from '../types';
 
 export function useTokenInfo(address: `0x${string}` | undefined, chainId: ChainId) {
-  console.log('address', address, address ? isAddressEqual(address, zeroAddress) : 'undefined');
   const result = useReadContracts({
     allowFailure: false,
     contracts: [
@@ -41,6 +40,7 @@ export function useTokenInfo(address: `0x${string}` | undefined, chainId: ChainI
 
     if (!result.data) {
       return {
+        chainId,
         address,
         decimals: 18,
         name: '-',
@@ -49,6 +49,7 @@ export function useTokenInfo(address: `0x${string}` | undefined, chainId: ChainI
     }
 
     return {
+      chainId,
       address,
       decimals: result.data[0],
       symbol: result.data[1],

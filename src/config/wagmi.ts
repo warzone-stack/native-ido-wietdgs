@@ -1,15 +1,30 @@
 import { getDefaultConfig } from '@rainbow-me/rainbowkit';
-import { bsc, sepolia } from 'wagmi/chains';
+import { http } from 'wagmi';
+import { bsc, mainnet, sepolia } from '@wagmi/core/chains';
+import { fallback, unstable_connector } from '@wagmi/core';
+import { injected } from '@wagmi/connectors';
 
+/**
+ * https://www.rainbowkit.com/guides/rainbowkit-wagmi-v2
+ */
+/* New API that includes Wagmi's createConfig and replaces getDefaultWallets and connectorsForWallets */
 export const config = getDefaultConfig({
   appName: 'DEX App',
-  // Get one from https://cloud.walletconnect.com
+  //   // Get one from https://cloud.walletconnect.com
   projectId: import.meta.env.VITE_WALLET_CONNECT_PROJECT_ID,
   chains: [sepolia, bsc],
-  ssr: false,
+  // connectors: [injected()],
+  transports: {
+    [bsc.id]: http(),
+    [sepolia.id]: fallback([
+      unstable_connector(injected),
+      http('https://sepolia.infura.io/v3/7358883bfd5b44dd9d03c50d373e8b6f'),
+    ]),
+  },
 });
 
 export enum ChainId {
+  ETHEREUM = mainnet.id,
   SEPOLIA = sepolia.id,
   BSC = bsc.id,
 }

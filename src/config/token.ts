@@ -5,12 +5,14 @@ import { ChainId } from './wagmi';
 
 export const NATIVE_TOKEN_MAP: Record<ChainId, TokenInfo> = {
   [ChainId.SEPOLIA]: {
+    chainId: ChainId.SEPOLIA,
     address: zeroAddress,
     decimals: sepolia.nativeCurrency.decimals,
     name: sepolia.nativeCurrency.name,
     symbol: sepolia.nativeCurrency.symbol,
   },
   [ChainId.BSC]: {
+    chainId: ChainId.BSC,
     address: zeroAddress,
     decimals: bsc.nativeCurrency.decimals,
     name: bsc.nativeCurrency.name,

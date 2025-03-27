@@ -90,8 +90,16 @@ button:disabled {
   @apply bg-primary text-black hover:bg-primary/90;
 }
 
+.btn-primary:disabled {
+  @apply bg-primary/40 text-black/40 hover:bg-primary/40 cursor-not-allowed;
+}
+
 .btn-bordered {
   @apply border-solid border border-[#000000] text-[#000000] hover:bg-[#000000]/10;
+}
+
+.btn-bordered:disabled {
+  @apply border-[#00000040] text-[#00000040] hover:bg-transparent cursor-not-allowed;
 }
 
 /* Success button */
