@@ -22,25 +22,12 @@ yarn
 VITE_WALLET_CONNECT_PROJECT_ID=your_project_id_here
 ```
 
-3. Start the development server:
+3. Install Solana dependencies:
+```bash
+yarn add @solana/web3.js @solana/wallet-adapter-react @solana/wallet-adapter-wallets @solana/wallet-adapter-react-ui
+```
+
+4. Start the development server:
 ```bash
 yarn dev
 ```
-
-## Build
-
-To build for production:
-```bash
-yarn build
-```
-
-## Technologies Used
-
-- React
-- TypeScript
-- Vite
-- Wagmi
-- RainbowKit
-- Tailwind CSS
-- ESLint
-- Prettier

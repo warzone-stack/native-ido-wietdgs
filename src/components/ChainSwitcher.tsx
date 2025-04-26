@@ -1,24 +1,26 @@
-import { useChainId, useSwitchChain } from 'wagmi';
-import { CHAIN_ID } from '../config/contracts';
-import { bsc } from 'wagmi/chains';
+import { useWallet } from '@solana/wallet-adapter-react';
+import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 
 export function ChainSwitcher() {
-  const chainId = useChainId();
-  const { switchChain } = useSwitchChain();
+  const { connected } = useWallet();
+  const { setVisible } = useWalletModal();
 
-  if (chainId === CHAIN_ID) {
+  if (connected) {
     return null;
   }
 
   return (
     <div className='w-full p-4 rounded-lg bg-warning-weak-light dark:bg-warning-weak-dark text-white'>
       <div className='flex flex-col gap-2'>
-        <p className='text-sm'>Please switch to BSC Mainnet to interact with the contract</p>
+        <p className='text-sm'>Please connect a Solana wallet to interact with the contract</p>
         <button
-          onClick={() => switchChain({ chainId: bsc.id })}
+          onClick={() => {
+            // 链接 solana 钱包
+            setVisible(true);
+          }}
           className='w-full py-2 px-4 rounded-lg bg-white dark:bg-gray-800 text-black dark:text-white hover:opacity-90 transition-opacity'
         >
-          Switch to BSC Mainnet
+          Connect Solana Wallet
         </button>
       </div>
     </div>

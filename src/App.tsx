@@ -1,27 +1,33 @@
-import { RainbowKitProvider } from '@rainbow-me/rainbowkit';
-import '@rainbow-me/rainbowkit/styles.css';
+import { useConnection, useWallet } from '@solana/wallet-adapter-react';
+import { LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from 'next-themes';
-import { useState } from 'react';
-import { WagmiProvider } from 'wagmi';
-import { ClaimForm } from './ClaimForm';
+import { useEffect, useState } from 'react';
 import { ChainSwitcher } from './components/ChainSwitcher';
 import { ConnectOKXButton } from './components/ConnectButton';
 import { Countdown } from './components/Countdown';
 import { Header } from './components/Header';
 import { TokenLogo } from './components/TokenLogo';
-import { CHAIN_ID, IDO_CONTRACT_ADDRESS } from './config/contracts';
 import { formatTokenAmount } from './config/number';
 import { SOCIAL_LINKS } from './config/site';
-import { config } from './config/wagmi';
-import { isOKXWallet } from './config/web3';
-import { DepositForm } from './DepositForm';
-import { useContractInfo } from './hooks/useContractInfo';
+import { useAlphaVaultInfo } from './hooks/useAlphaVaultInfo';
+import { SolanaWalletContextProvider } from './solana/WalletProvider';
 
 const queryClient = new QueryClient();
 
 function AppContent() {
-  const contractInfo = useContractInfo();
+  const contractInfo = useAlphaVaultInfo();
+  const { wallet, publicKey } = useWallet();
+  const { connection } = useConnection();
+  const [balance, setBalance] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (publicKey) {
+      connection.getBalance(publicKey).then((balance) => {
+        setBalance(balance / LAMPORTS_PER_SOL);
+      });
+    }
+  }, [connection, publicKey]);
 
   const [isDepositing, setIsDepositing] = useState(false);
 
@@ -31,7 +37,8 @@ function AppContent() {
       ? Number(contractInfo.endTimestamp - contractInfo.startTimestamp) / 3600
       : undefined;
 
-  const isOKX = isOKXWallet();
+  const isOKX = wallet?.adapter.name === 'OKX Wallet';
+
   return (
     <div className='min-h-screen'>
       <Header />
@@ -40,12 +47,14 @@ function AppContent() {
           className={`max-w-[560px] 2xl:max-w-[720px] mx-auto bg-white dark:bg-background-dark rounded-xl p-5 flex flex-col gap-7 shadow-[0px_0px_20px_0px_rgba(0,0,0,0.10)] dark:shadow-[0px_0px_20px_0px_rgba(0,0,0,0.10)] ${isDepositing ? '' : 'min-h-[776px]'}`}
         >
           {isDepositing ? (
-            <DepositForm contractInfo={contractInfo} setIsDepositing={setIsDepositing} />
+            // <DepositForm contractInfo={contractInfo} setIsDepositing={setIsDepositing} />
+            <div>DepositForm</div>
           ) : (
             <>
-              <div className='w-full min-h-[120px] rounded-lg bg-[--primary] opacity-20 p-5 flex flex-col items-start gap-7'>
-                <p>{CHAIN_ID}</p>
-                <p className='break-all'>{IDO_CONTRACT_ADDRESS}</p>
+              <div className='w-full min-h-[120px] rounded-lg bg-[--primary]  p-5 flex flex-col items-start gap-7'>
+                <p>{connection.rpcEndpoint}</p>
+                <p className='break-all'>{publicKey?.toBase58()}</p>
+                <p>{balance} SOL</p>
               </div>
 
               <ChainSwitcher />
@@ -110,7 +119,8 @@ function AppContent() {
                     </div>
                   )}
 
-                  <ClaimForm contractInfo={contractInfo} />
+                  {/* <ClaimForm contractInfo={contractInfo} /> */}
+                  <div>ClaimForm</div>
 
                   <div className='flex flex-col gap-3 items-stretch'>
                     <div className='flex items-center justify-between'>
@@ -350,15 +360,13 @@ function AppContent() {
 
 function App() {
   return (
-    <WagmiProvider config={config}>
+    <SolanaWalletContextProvider>
       <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider>
-          <ThemeProvider attribute='class' defaultTheme='light'>
-            <AppContent />
-          </ThemeProvider>
-        </RainbowKitProvider>
+        <ThemeProvider attribute='class' defaultTheme='light'>
+          <AppContent />
+        </ThemeProvider>
       </QueryClientProvider>
-    </WagmiProvider>
+    </SolanaWalletContextProvider>
   );
 }
 
