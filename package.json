@@ -10,7 +10,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@coral-xyz/anchor": "^0.31.1",
     "@heroicons/react": "^2.2.0",
+    "@meteora-ag/alpha-vault": "^1.1.10",
     "@rainbow-me/rainbowkit": "^2.2.4",
     "@solana/wallet-adapter-react": "^0.15.38",
     "@solana/wallet-adapter-react-ui": "^0.9.38",
