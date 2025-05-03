@@ -37,7 +37,9 @@ function AppContent() {
       ? Number(contractInfo.endTimestamp - contractInfo.startTimestamp) / 3600
       : undefined;
 
-  const isOKX = wallet?.adapter.name === 'OKX Wallet';
+  // Backpack
+  // OKX Wallet
+  const isOKX = wallet?.adapter.name === 'Backpack';
 
   return (
     <div className='min-h-screen'>
@@ -53,7 +55,18 @@ function AppContent() {
             <>
               <div className='w-full min-h-[120px] rounded-lg bg-[--primary]  p-5 flex flex-col items-start gap-7'>
                 <p>{connection.rpcEndpoint}</p>
-                <p className='break-all'>{publicKey?.toBase58()}</p>
+                <a
+                  className='break-all text-blue-500 underline'
+                  href={
+                    publicKey
+                      ? `https://solscan.io/account/${publicKey.toBase58()}?cluster=devnet`
+                      : '#'
+                  }
+                  target='_blank'
+                  rel='noopener noreferrer'
+                >
+                  {publicKey?.toBase58()}
+                </a>
                 <p>{balance} SOL</p>
               </div>
 
