@@ -14,7 +14,7 @@ import { CHAIN_ID, IDO_CONTRACT_ADDRESS } from './config/contracts';
 import { formatTokenAmount } from './config/number';
 import { SOCIAL_LINKS } from './config/site';
 import { config } from './config/wagmi';
-import { isOKXWallet } from './config/web3';
+import { useIsOKXWallet } from './config/web3';
 import { DepositForm } from './DepositForm';
 import { useContractInfo } from './hooks/useContractInfo';
 
@@ -31,7 +31,7 @@ function AppContent() {
       ? Number(contractInfo.endTimestamp - contractInfo.startTimestamp) / 3600
       : undefined;
 
-  const isOKX = isOKXWallet();
+  const isOKX = useIsOKXWallet();
   return (
     <div className='min-h-screen'>
       <Header />
