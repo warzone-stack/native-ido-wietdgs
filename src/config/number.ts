@@ -51,3 +51,7 @@ export function formatTokenAmount(
 
   return amount.dp(showDecimals, BigNumber.ROUND_DOWN).toFormat();
 }
+
+export const byWei = (amount: BigNumber | string | number, decimals: number) => {
+  return new BigNumber(amount).div(new BigNumber(10).pow(decimals));
+};

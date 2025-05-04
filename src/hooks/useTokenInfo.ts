@@ -1,64 +1,30 @@
-import { useMemo } from 'react';
-import { erc20Abi, isAddressEqual, zeroAddress } from 'viem';
-import { useReadContracts } from 'wagmi';
-import { NATIVE_TOKEN_MAP } from '../config/token';
-import { ChainId } from '../config/wagmi';
-import { TokenInfo } from '../types';
+import { Cluster, PublicKey } from '@solana/web3.js';
+import { useQuery } from '@tanstack/react-query';
+import { useSolanaConnection } from './useSolanaConnection';
 
-export function useTokenInfo(address: `0x${string}` | undefined, chainId: ChainId) {
-  const result = useReadContracts({
-    allowFailure: false,
-    contracts: [
-      {
-        address,
-        abi: erc20Abi,
-        functionName: 'decimals',
-      },
-      {
-        address,
-        abi: erc20Abi,
-        functionName: 'symbol',
-      },
-      {
-        address,
-        abi: erc20Abi,
-        functionName: 'name',
-      },
-    ],
-    query: {
-      enabled: !!address && !isAddressEqual(address, zeroAddress),
+export function useTokenInfo({
+  mint,
+  chainId,
+  symbol,
+}: {
+  mint: string | PublicKey | undefined;
+  chainId: Cluster;
+  symbol?: string;
+}) {
+  const { fetchTokenInfo } = useSolanaConnection();
+
+  const tokenInfoQuery = useQuery({
+    queryKey: ['token', 'info', chainId, mint],
+    queryFn: async () => {
+      const result = await fetchTokenInfo({
+        mint,
+        chainId,
+        symbol,
+      });
+      return result;
     },
+    enabled: !!mint,
   });
 
-  const tokenInfo: TokenInfo | undefined = useMemo(() => {
-    if (!address) {
-      return undefined;
-    }
-    if (isAddressEqual(address, zeroAddress)) {
-      return NATIVE_TOKEN_MAP[chainId];
-    }
-
-    if (!result.data) {
-      return {
-        chainId,
-        address,
-        decimals: 18,
-        name: '-',
-        symbol: '-',
-      };
-    }
-
-    return {
-      chainId,
-      address,
-      decimals: result.data[0],
-      symbol: result.data[1],
-      name: result.data[2],
-    };
-  }, [address, chainId, result.data]);
-
-  return {
-    tokenInfo,
-    isLoading: result.isLoading,
-  };
+  return tokenInfoQuery.data;
 }
