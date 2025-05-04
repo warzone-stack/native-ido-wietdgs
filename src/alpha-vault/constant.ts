@@ -7,12 +7,12 @@ export const PROGRAM_ID = Object.freeze({
   localhost: 'SNPmGgnywBvvrAKMLundzG6StojyHTHDLu7T4sdhP4k',
 });
 
-export const SEED = Object.freeze({
+export const SEED = {
   escrow: 'escrow',
   vault: 'vault',
   merkleRoot: 'merkle_root',
   crankFeeWhitelist: 'crank_fee_whitelist',
-});
+};
 
 export const ALPHA_VAULT_TREASURY_ID = new PublicKey(
   'BJQbRiRWhJCyTYZcAuAL3ngDCx3AyFQGKDq8zhiZAKUw'

@@ -15,6 +15,7 @@ import { useAlphaVaultInfo } from './hooks/useAlphaVaultInfo';
 import { VaultProvider } from './solana/VaultProvider';
 import { SolanaWalletContextProvider } from './solana/WalletProvider';
 import { generateSolScanLink } from './utils';
+import { ClaimForm } from './ClaimForm';
 
 const queryClient = new QueryClient();
 
@@ -147,8 +148,7 @@ function AppContent() {
                     </div>
                   )}
 
-                  {/* <ClaimForm contractInfo={contractInfo} /> */}
-                  <div>ClaimForm</div>
+                  <ClaimForm contractInfo={contractInfo} />
 
                   <div className='flex flex-col gap-3 items-stretch'>
                     <div className='flex items-center justify-between'>
@@ -302,7 +302,7 @@ function AppContent() {
                     <button
                       onClick={() => {
                         window.open(
-                          `https://pancakeswap.finance/add/${contractInfo.lpToken0?.address}/${contractInfo.offeringToken?.address}`,
+                          `https://app.meteora.ag/pools/${contractInfo.pool?.toBase58()}`,
                           '_blank'
                         );
                       }}

@@ -71,7 +71,6 @@ export function useSolanaConnection() {
     chainId: Cluster;
     symbol?: string;
   }): Promise<TokenInfo> => {
-    console.log('fetchTokenInfo', mint?.toString(), chainId, symbol);
     if (!mint) {
       throw new Error('please input mint');
     }

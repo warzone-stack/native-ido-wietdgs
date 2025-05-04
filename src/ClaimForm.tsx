@@ -1,47 +1,55 @@
-import { useEffect, useMemo } from 'react';
+import { useConnection, useWallet } from '@solana/wallet-adapter-react';
+import { useMutation } from '@tanstack/react-query';
+import { useContext, useMemo } from 'react';
 import { TokenLogo } from './components/TokenLogo';
 import { formatTokenAmount } from './config/number';
-import { useContractInfo } from './hooks/useContractInfo';
-import { BaseError, useWaitForTransactionReceipt } from 'wagmi';
-import { useWriteContract } from 'wagmi';
-import { idoContract } from './config/contracts';
+import { useAlphaVaultInfo } from './hooks/useAlphaVaultInfo';
+import { VaultContext } from './solana/VaultContext';
 
 export interface ClaimFormProps {
-  contractInfo: ReturnType<typeof useContractInfo>;
+  contractInfo: ReturnType<typeof useAlphaVaultInfo>;
 }
 
-export const ClaimForm = (props: ClaimFormProps) => {
-  const { contractInfo } = props;
+export const ClaimForm = ({ contractInfo }: ClaimFormProps) => {
+  const { wallet, publicKey } = useWallet();
+  const { connection } = useConnection();
+
+  const { vault, refetchVault } = useContext(VaultContext);
 
   const {
-    data: claimHash,
+    mutate: claim,
     error,
-    writeContract: claim,
     isPending: claimIsPending,
-  } = useWriteContract({
-    mutation: {
-      onSuccess: () => {
-        contractInfo.refetchUserBalance();
-        contractInfo.refetchUserInfo();
-        contractInfo.refetchPoolInfo();
-      },
+  } = useMutation({
+    mutationFn: async () => {
+      if (!vault || !publicKey || !wallet) {
+        return;
+      }
+
+      const claimTx = await vault.claimToken(publicKey);
+
+      console.log('Claiming bought token', claimTx);
+      const txHash = await wallet.adapter.sendTransaction(claimTx, connection);
+      console.log('txHash', txHash);
+
+      const latestBlockhash = await connection.getLatestBlockhash();
+      const confirmResult = await connection.confirmTransaction({
+        signature: txHash,
+        blockhash: latestBlockhash.blockhash,
+        lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
+      });
+      console.log('confirmResult', confirmResult);
+
+      return confirmResult;
+    },
+    onSuccess: () => {
+      refetchVault();
+    },
+    onError: (error) => {
+      console.error('Claim error', error);
+      refetchVault();
     },
   });
-  const {
-    isLoading: isClaimConfirming,
-    isSuccess: isClaimConfirmed,
-    isError: isClaimError,
-    error: claimError,
-  } = useWaitForTransactionReceipt({
-    hash: claimHash,
-  });
-  useEffect(() => {
-    if (isClaimConfirmed) {
-      contractInfo.refetchUserBalance();
-      contractInfo.refetchUserInfo();
-      contractInfo.refetchPoolInfo();
-    }
-  }, [contractInfo, isClaimConfirmed]);
 
   const claimBtn = useMemo(() => {
     if (contractInfo.status !== 'ended') {
@@ -69,29 +77,14 @@ export const ClaimForm = (props: ClaimFormProps) => {
       };
     }
 
-    if (isClaimConfirming) {
-      return {
-        text: 'Confirming...',
-        disabled: true,
-      };
-    }
-
     return {
       disabled: false,
       text: 'Claim',
       onClick: () => {
-        if (!idoContract.address) {
-          return;
-        }
-        claim({
-          address: idoContract.address,
-          abi: idoContract.abi,
-          functionName: 'harvestPool',
-          args: [0],
-        });
+        claim();
       },
     };
-  }, [contractInfo.status, contractInfo.userInfo, claim, claimIsPending, isClaimConfirming]);
+  }, [claim, claimIsPending, contractInfo.status, contractInfo.userInfo]);
 
   return (
     <div className='flex flex-col gap-[10px] items-stretch'>
@@ -116,16 +109,7 @@ export const ClaimForm = (props: ClaimFormProps) => {
           {claimBtn.text}
         </button>
       </div>
-      {error && (
-        <div className='text-red-500 text-xs'>
-          Error: {(error as BaseError).shortMessage || error.message}
-        </div>
-      )}
-      {claimError && (
-        <div className='text-red-500 text-xs'>
-          Error: {(claimError as BaseError).shortMessage || claimError.message}
-        </div>
-      )}
+      {error && <div className='text-red-500 text-xs'>Error: {error.message}</div>}
     </div>
   );
 };
