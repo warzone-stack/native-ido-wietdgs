@@ -75,6 +75,7 @@ export function useSolanaConnection() {
       throw new Error('please input mint');
     }
     const mintStr = mint.toString();
+    console.log('mintStr', mintStr, chainId, symbol);
 
     if (
       mintStr.toUpperCase() === 'SOL' ||
@@ -109,6 +110,7 @@ export function useSolanaConnection() {
       throw new Error(`mint address not found: ${mintStr}`);
     }
     const data = MintLayout.decode(onlineInfo.data);
+    console.log('onlineInfo', onlineInfo, data);
 
     let mintSymbol = symbol ?? mintStr.toString().substring(0, 6);
     if (!symbol) {
@@ -118,8 +120,8 @@ export function useSolanaConnection() {
         // 计算 metadata PDA
         const [metadataPDA] = PublicKey.findProgramAddressSync(
           [
-            // Buffer.from('metadata'),
-            new Uint8Array([109, 101, 116, 97, 100, 97, 116, 97]), // 'metadata' in ASCII
+            Buffer.from('metadata'),
+            // new Uint8Array([109, 101, 116, 97, 100, 97, 116, 97]), // 'metadata' in ASCII
             new PublicKey(TOKEN_METADATA_PROGRAM_ID).toBuffer(),
             mintPubkey.toBuffer(),
           ],
