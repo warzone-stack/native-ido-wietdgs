@@ -1,6 +1,16 @@
 import BigNumber from 'bignumber.js';
+import { useContext, useEffect } from 'react';
+import { VaultContext } from '../solana/VaultContext';
 
 export function useAlphaVaultInfo() {
+  const { vault } = useContext(VaultContext);
+
+  useEffect(() => {
+    if (vault) {
+      console.log(vault);
+    }
+  }, [vault]);
+
   // mock 数据
   const lpToken0 = {
     chainId: 1,

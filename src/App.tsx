@@ -8,17 +8,22 @@ import { ConnectOKXButton } from './components/ConnectButton';
 import { Countdown } from './components/Countdown';
 import { Header } from './components/Header';
 import { TokenLogo } from './components/TokenLogo';
+import { VAULT_ADDRESS } from './config/contracts';
 import { formatTokenAmount } from './config/number';
 import { SOCIAL_LINKS } from './config/site';
 import { useAlphaVaultInfo } from './hooks/useAlphaVaultInfo';
+import { VaultProvider } from './solana/VaultProvider';
 import { SolanaWalletContextProvider } from './solana/WalletProvider';
+import { generateSolScanLink } from './utils';
 
 const queryClient = new QueryClient();
 
 function AppContent() {
-  const contractInfo = useAlphaVaultInfo();
   const { wallet, publicKey } = useWallet();
   const { connection } = useConnection();
+
+  const contractInfo = useAlphaVaultInfo();
+
   const [balance, setBalance] = useState<number | null>(null);
 
   useEffect(() => {
@@ -55,19 +60,29 @@ function AppContent() {
             <>
               <div className='w-full min-h-[120px] rounded-lg bg-[--primary]  p-5 flex flex-col items-start gap-7'>
                 <p>{connection.rpcEndpoint}</p>
-                <a
-                  className='break-all text-blue-500 underline'
-                  href={
-                    publicKey
-                      ? `https://solscan.io/account/${publicKey.toBase58()}?cluster=devnet`
-                      : '#'
-                  }
-                  target='_blank'
-                  rel='noopener noreferrer'
-                >
-                  {publicKey?.toBase58()}
-                </a>
-                <p>{balance} SOL</p>
+                <p>
+                  Account:{' '}
+                  <a
+                    className='break-all text-blue-500 underline'
+                    href={generateSolScanLink(publicKey)}
+                    target='_blank'
+                    rel='noopener noreferrer'
+                  >
+                    {publicKey?.toBase58()}
+                  </a>
+                </p>
+                <p>Account Balance: {balance} SOL</p>
+                <p>
+                  Vault:{' '}
+                  <a
+                    className='break-all text-blue-500 underline'
+                    href={generateSolScanLink(VAULT_ADDRESS)}
+                    target='_blank'
+                    rel='noopener noreferrer'
+                  >
+                    {VAULT_ADDRESS.toBase58()}
+                  </a>
+                </p>
               </div>
 
               <ChainSwitcher />
@@ -376,7 +391,9 @@ function App() {
     <SolanaWalletContextProvider>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider attribute='class' defaultTheme='light'>
-          <AppContent />
+          <VaultProvider>
+            <AppContent />
+          </VaultProvider>
         </ThemeProvider>
       </QueryClientProvider>
     </SolanaWalletContextProvider>
