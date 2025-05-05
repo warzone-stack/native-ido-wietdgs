@@ -1,15 +1,16 @@
+import { BN } from '@coral-xyz/anchor';
 import { useConnection } from '@solana/wallet-adapter-react';
-import { useQuery } from '@tanstack/react-query';
+import { PublicKey } from '@solana/web3.js';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useCallback } from 'react';
 import { AlphaVault } from '../alpha-vault';
 import { VAULT_ADDRESS } from '../config/contracts';
 import { VaultContext } from './VaultContext';
-import { PublicKey } from '@solana/web3.js';
-import { BN } from '@coral-xyz/anchor';
 
 export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
   const { connection } = useConnection();
-
-  const { data: vault, refetch } = useQuery({
+  const client = useQueryClient();
+  const { data: vault } = useQuery({
     queryKey: ['vault', VAULT_ADDRESS],
     queryFn: async () => {
       const vault = await AlphaVault.create(connection, VAULT_ADDRESS);
@@ -107,6 +108,16 @@ export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
             ? vault.vault.totalClaimedToken.toString()
             : vault.vault.totalClaimedToken
         );
+        // depositingPoint: 存入时间点 (Depositing point)
+        console.log(
+          'depositingPoint:',
+          BN.isBN(vault.vault.depositingPoint)
+            ? vault.vault.depositingPoint.toString()
+            : vault.vault.depositingPoint,
+          BN.isBN(vault.vault.depositingPoint)
+            ? new Date(vault.vault.depositingPoint.toNumber() * 1000).toLocaleString()
+            : vault.vault.depositingPoint
+        );
         // startVestingPoint: 开始释放时间戳 (Start vesting timestamp)
         console.log(
           'startVestingPoint:',
@@ -143,13 +154,6 @@ export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
             ? vault.vault.individualDepositingCap.toString()
             : vault.vault.individualDepositingCap
         );
-        // depositingPoint: 存入时间点 (Depositing point)
-        console.log(
-          'depositingPoint:',
-          BN.isBN(vault.vault.depositingPoint)
-            ? vault.vault.depositingPoint.toString()
-            : vault.vault.depositingPoint
-        );
         // escrowFee: 开启托管时的固定手续费 (Flat fee when user open an escrow)
         console.log(
           'escrowFee:',
@@ -184,9 +188,14 @@ export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
     refetchInterval: 15000,
   });
 
-  return (
-    <VaultContext.Provider value={{ vault, refetchVault: refetch }}>
-      {children}
-    </VaultContext.Provider>
-  );
+  const refetchVault = useCallback(() => {
+    client.invalidateQueries({
+      queryKey: ['vault'],
+    });
+    client.invalidateQueries({
+      queryKey: ['token'],
+    });
+  }, [client]);
+
+  return <VaultContext.Provider value={{ vault, refetchVault }}>{children}</VaultContext.Provider>;
 };

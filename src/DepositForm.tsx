@@ -1,76 +1,77 @@
-import '@rainbow-me/rainbowkit/styles.css';
+import { BN } from '@coral-xyz/anchor';
+import { useConnection, useWallet } from '@solana/wallet-adapter-react';
+import { useWalletModal } from '@solana/wallet-adapter-react-ui';
+import { useMutation } from '@tanstack/react-query';
 import BigNumber from 'bignumber.js';
-import { useEffect, useMemo, useState } from 'react';
-import { erc20Abi } from 'viem';
-import { useAccount, useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
+import { useContext, useMemo, useState } from 'react';
 import { TokenLogo } from './components/TokenLogo';
-import { idoContract } from './config/contracts';
 import { formatTokenAmount } from './config/number';
-import { isNativeToken } from './config/token';
-import { useContractInfo } from './hooks/useContractInfo';
+import { useAlphaVaultInfo } from './hooks/useAlphaVaultInfo';
+import { VaultContext } from './solana/VaultContext';
 
 export interface DepositFormProps {
-  contractInfo: ReturnType<typeof useContractInfo>;
+  contractInfo: ReturnType<typeof useAlphaVaultInfo>;
   setIsDepositing: (isDepositing: boolean) => void;
 }
 
 export const DepositForm = ({ contractInfo, setIsDepositing }: DepositFormProps) => {
-  const { address } = useAccount();
+  const { wallet, publicKey } = useWallet();
+  const { setVisible } = useWalletModal();
+  const { connection } = useConnection();
+
+  const { vault, refetchVault } = useContext(VaultContext);
 
   const [depositAmount, setDepositAmount] = useState<string>('');
 
   const {
-    data: approveHash,
-    writeContract: approve,
-    isPending: approveIsPending,
-  } = useWriteContract({
-    mutation: {
-      onSuccess: () => {
-        contractInfo.refetchUserBalance();
-      },
-    },
-  });
-  const { isLoading: isApproveConfirming, isSuccess: isApproveConfirmed } =
-    useWaitForTransactionReceipt({
-      hash: approveHash,
-    });
-  useEffect(() => {
-    if (isApproveConfirmed) {
-      contractInfo.refetchUserBalance();
-    }
-  }, [contractInfo, isApproveConfirmed]);
-
-  const {
-    data: depositHash,
-    writeContract: deposit,
+    mutate: deposit,
+    error,
     isPending: depositIsPending,
-  } = useWriteContract({
-    mutation: {
-      onSuccess: () => {
-        contractInfo.refetchUserBalance();
-        contractInfo.refetchUserInfo();
-        contractInfo.refetchPoolInfo();
-      },
+  } = useMutation({
+    mutationFn: async () => {
+      if (!vault || !publicKey || !wallet) {
+        return;
+      }
+
+      const depositBN = new BigNumber(depositAmount);
+
+      const depositAmountBN = new BN(
+        depositBN
+          .multipliedBy(`1e${contractInfo.lpToken0?.decimals}`)
+          .dp(0, BigNumber.ROUND_DOWN)
+          .toString()
+      );
+      const claimTx = await vault.deposit(depositAmountBN, publicKey);
+
+      console.log('Claiming bought token', claimTx);
+      const txHash = await wallet.adapter.sendTransaction(claimTx, connection);
+      console.log('txHash', txHash);
+
+      const latestBlockhash = await connection.getLatestBlockhash();
+      const confirmResult = await connection.confirmTransaction({
+        signature: txHash,
+        blockhash: latestBlockhash.blockhash,
+        lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
+      });
+      console.log('confirmResult', confirmResult);
+
+      return confirmResult;
+    },
+    onSuccess: () => {
+      refetchVault();
+    },
+    onError: (error) => {
+      console.error('Deposit error', error);
+      refetchVault();
     },
   });
-  const { isLoading: isDepositConfirming, isSuccess: isDepositConfirmed } =
-    useWaitForTransactionReceipt({
-      hash: depositHash,
-    });
-  useEffect(() => {
-    if (isDepositConfirmed) {
-      contractInfo.refetchUserBalance();
-      contractInfo.refetchUserInfo();
-      contractInfo.refetchPoolInfo();
-      setIsDepositing(false);
-    }
-  }, [contractInfo, isDepositConfirmed, setIsDepositing]);
 
   const depositBtn = useMemo(() => {
-    if (!address) {
+    if (!publicKey) {
       return {
         text: 'Connect Wallet',
-        disabled: true,
+        disabled: false,
+        onClick: () => setVisible(true),
       };
     }
 
@@ -101,56 +102,9 @@ export const DepositForm = ({ contractInfo, setIsDepositing }: DepositFormProps)
       };
     }
 
-    if (approveIsPending) {
-      return {
-        text: 'Approving...',
-        disabled: true,
-      };
-    }
-
-    if (isApproveConfirming) {
-      return {
-        text: 'Confirming...',
-        disabled: true,
-      };
-    }
-
-    if (!isNativeToken(contractInfo.lpToken0)) {
-      if (!contractInfo.lpToken0Allowance || depositAmountBN.gt(contractInfo.lpToken0Allowance)) {
-        return {
-          text: `Approve ${contractInfo.lpToken0.symbol}`,
-          disabled: false,
-          onClick: () => {
-            if (!contractInfo.lpToken0?.address) {
-              return;
-            }
-
-            approve({
-              address: contractInfo.lpToken0.address,
-              abi: erc20Abi,
-              functionName: 'approve',
-              args: [
-                idoContract.address,
-                BigInt(
-                  '115792089237316195423570985008687907853269984665640564039457584007913129639935'
-                ),
-              ],
-            });
-          },
-        };
-      }
-    }
-
     if (depositIsPending) {
       return {
         text: 'Depositing...',
-        disabled: true,
-      };
-    }
-
-    if (isDepositConfirming) {
-      return {
-        text: 'Confirming...',
         disabled: true,
       };
     }
@@ -159,37 +113,10 @@ export const DepositForm = ({ contractInfo, setIsDepositing }: DepositFormProps)
       text: 'Deposit',
       disabled: false,
       onClick: () => {
-        if (!contractInfo.lpToken0 || !idoContract.address) {
-          return;
-        }
-
-        const isNative = isNativeToken(contractInfo.lpToken0);
-        const depositAmountValue = BigInt(
-          depositAmountBN
-            .multipliedBy(`1e${contractInfo.lpToken0.decimals}`)
-            .dp(0, BigNumber.ROUND_DOWN)
-            .toString()
-        );
-        deposit({
-          address: idoContract.address,
-          abi: idoContract.abi,
-          functionName: 'depositPool',
-          args: [isNative ? BigInt(0) : depositAmountValue, 0, 0n, '0x0'],
-          value: isNative ? depositAmountValue : undefined,
-        });
+        deposit();
       },
     };
-  }, [
-    address,
-    contractInfo,
-    depositAmount,
-    approveIsPending,
-    isApproveConfirming,
-    depositIsPending,
-    isDepositConfirming,
-    approve,
-    deposit,
-  ]);
+  }, [contractInfo, deposit, depositAmount, depositIsPending, publicKey, setVisible]);
 
   return (
     <>
@@ -272,6 +199,7 @@ export const DepositForm = ({ contractInfo, setIsDepositing }: DepositFormProps)
         >
           {depositBtn.text}
         </button>
+        {error && <div className='text-red-500 text-xs'>Error: {error.message}</div>}
       </div>
     </>
   );

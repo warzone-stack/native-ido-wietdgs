@@ -137,8 +137,16 @@ Done
 
 ```物料 
 devnet 
+dynamic amm prorata
 8PCjMuYBpWdjadterCxZmiSYg419GJFJEgHbtwZE81p2 ended
 7wXwxQPKQ2rKuoEVbB88iMppbCVFfRU15TkGyofHcpMg
+8iMpxKvnhAz7A3z7imNwmjHPZpudkbhcV52JqkGAZXyY
 
-HULWmq435HcurzM59tfC4p9txUF71gZH6ghFVSsmWGQY FCFS
+dlmm prorata
+58FicHtDbmPcXMSC4AmWcyTiYQUQD9Um4eSGeYrx9gcn
+9Co8dpjidoc4vBCnEqjpJH4rYHeCUNzhQRuVHUkodPyu
+AewUZ3pmXvkj8URk7ic6ZvF7EEb2uwQisdTV9VT5H7Wd
+
+dynamic amm FCFS
+HULWmq435HcurzM59tfC4p9txUF71gZH6ghFVSsmWGQY 
 ```

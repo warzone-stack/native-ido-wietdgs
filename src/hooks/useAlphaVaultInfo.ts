@@ -7,6 +7,7 @@ import { useContext } from 'react';
 import { CLUSTER } from '../config/contracts';
 import { VaultContext } from '../solana/VaultContext';
 import { useTokenInfo } from './useTokenInfo';
+import { useCryptoPrice } from './useCryptoPrice';
 
 export type IDOStatus = 'not_started' | 'in_progress' | 'ended';
 
@@ -48,32 +49,39 @@ export function useAlphaVaultInfo() {
   });
 
   // mock 数据
-  const lpToken0 = useTokenInfo({
+  const { token: lpToken0, balance: lpToken0Balance } = useTokenInfo({
     mint: vault?.vault.quoteMint,
     chainId: CLUSTER,
   });
-  const lpToken0USD = 150;
-  const lpToken0USDLoading = false;
-  const offeringToken = useTokenInfo({
+  const { token: offeringToken, balance: offeringTokenBalance } = useTokenInfo({
     mint: vault?.vault.baseMint,
     chainId: CLUSTER,
   });
-  const offeringTokenUSD = 1;
-  const offeringTokenUSDLoading = false;
-  const startTimestamp =
+
+  const { data: lpToken0USD, isLoading: lpToken0USDLoading } = useCryptoPrice(lpToken0);
+  const { data: offeringTokenUSD, isLoading: offeringTokenUSDLoading } =
+    useCryptoPrice(offeringToken);
+
+  const now = Math.floor(Date.now() / 1000);
+
+  let startTimestamp =
+    vault && BN.isBN(vault.vault.depositingPoint)
+      ? vault.vault.depositingPoint.toNumber()
+      : undefined;
+  if (startTimestamp === 0) {
+    startTimestamp = now;
+  }
+  const endTimestamp =
     vault && BN.isBN(vault.vault.startVestingPoint)
       ? vault.vault.startVestingPoint.toNumber()
-      : undefined;
-  const endTimestamp =
-    vault && BN.isBN(vault.vault.endVestingPoint)
-      ? vault.vault.endVestingPoint.toNumber()
       : undefined;
 
   // Calculate IDO status based on timestamps
   const status: IDOStatus = (() => {
-    if (!startTimestamp || !endTimestamp) return 'not_started';
+    if (startTimestamp === undefined || endTimestamp === undefined) {
+      return 'not_started';
+    }
 
-    const now = BigInt(Math.floor(Date.now() / 1000));
     const start = startTimestamp;
     const end = endTimestamp;
 
@@ -82,31 +90,26 @@ export function useAlphaVaultInfo() {
     return 'in_progress';
   })();
 
-  const minDepositAmount = 0.1;
   const totalTokensOffered = new BigNumber(10000);
   const poolInfo0 = {
     raisingAmountPool: new BigNumber(5000),
     offeringAmountPool: new BigNumber(10000),
     capPerUserInLP: new BigNumber(10),
-    hasTax: false,
-    flatTaxRate: new BigNumber(0),
-    totalAmountPool: vault ? new BigNumber(vault.vault.totalDeposit.toString()) : new BigNumber(0),
-    sumTaxesOverflow: new BigNumber(0),
+    totalAmountPool: vault
+      ? new BigNumber(vault.vault.totalDeposit.toString()).div(`1e${lpToken0?.decimals}`)
+      : new BigNumber(0),
   };
   const userInfo = {
-    amountPool: new BigNumber(100),
-    claimedPool: false,
+    amountPool: escrowInfo
+      ? new BigNumber(escrowInfo?.depositInfo.totalDeposit.toString()).div(
+          `1e${lpToken0?.decimals}`
+        )
+      : new BigNumber(0),
     userOfferingAmountPool: escrowInfo
-      ? new BigNumber(escrowInfo?.claimable.toString())
+      ? new BigNumber(escrowInfo?.claimable.toString()).div(`1e${offeringToken?.decimals}`)
       : new BigNumber(0),
     userRefundingAmountPool: new BigNumber(0),
-    userTaxAmountPool: new BigNumber(0),
   };
-  const lpToken0Balance = 3;
-  const lpToken0Allowance = 0;
-  const refetchPoolInfo = () => Promise.resolve();
-  const refetchUserInfo = () => Promise.resolve();
-  const refetchUserBalance = () => Promise.resolve();
 
   return {
     pool: vault?.vault.pool instanceof PublicKey ? vault.vault.pool : undefined,
@@ -118,15 +121,10 @@ export function useAlphaVaultInfo() {
     offeringTokenUSDLoading,
     startTimestamp,
     endTimestamp,
-    minDepositAmount,
     totalTokensOffered,
     poolInfo0,
     status,
     userInfo,
     lpToken0Balance,
-    lpToken0Allowance,
-    refetchPoolInfo,
-    refetchUserInfo,
-    refetchUserBalance,
   };
 }

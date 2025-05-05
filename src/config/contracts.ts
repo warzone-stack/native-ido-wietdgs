@@ -4,7 +4,7 @@ import { Cluster, PublicKey } from '@solana/web3.js';
 export const VAULT_ADDRESS = new PublicKey(
   import.meta.env.PROD
     ? (import.meta.env.VITE_SOL_VAULT_ADDRESS as string)
-    : 'HULWmq435HcurzM59tfC4p9txUF71gZH6ghFVSsmWGQY'
+    : 'AewUZ3pmXvkj8URk7ic6ZvF7EEb2uwQisdTV9VT5H7Wd'
 );
 
 export const CLUSTER: Cluster = import.meta.env.PROD

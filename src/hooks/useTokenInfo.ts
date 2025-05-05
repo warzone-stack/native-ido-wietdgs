@@ -12,7 +12,7 @@ export function useTokenInfo({
   chainId: Cluster;
   symbol?: string;
 }) {
-  const { fetchTokenInfo } = useSolanaConnection();
+  const { fetchTokenInfo, fetchTokenBalance } = useSolanaConnection();
 
   const tokenInfoQuery = useQuery({
     queryKey: ['token', 'info', chainId, mint],
@@ -27,11 +27,20 @@ export function useTokenInfo({
     enabled: !!mint,
   });
 
+  const tokenBalanceQuery = useQuery({
+    queryKey: ['token', 'balance', mint],
+    queryFn: async () => {
+      const result = await fetchTokenBalance(mint);
+      return result;
+    },
+    enabled: !!mint,
+  });
+
   useEffect(() => {
     if (tokenInfoQuery.error) {
       console.log('tokenInfoQuery.error', tokenInfoQuery.error);
     }
   }, [tokenInfoQuery]);
 
-  return tokenInfoQuery.data;
+  return { token: tokenInfoQuery.data, balance: tokenBalanceQuery.data?.amount };
 }

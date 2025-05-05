@@ -16,6 +16,7 @@ import { VaultProvider } from './solana/VaultProvider';
 import { SolanaWalletContextProvider } from './solana/WalletProvider';
 import { generateSolScanLink } from './utils';
 import { ClaimForm } from './ClaimForm';
+import { DepositForm } from './DepositForm';
 
 const queryClient = new QueryClient();
 
@@ -40,12 +41,13 @@ function AppContent() {
   // Calculate sale duration in hours
   const saleDuration =
     contractInfo.startTimestamp && contractInfo.endTimestamp
-      ? Number(contractInfo.endTimestamp - contractInfo.startTimestamp) / 3600
+      ? (Number(contractInfo.endTimestamp - contractInfo.startTimestamp) / 3600).toFixed(2)
       : undefined;
 
   // Backpack
   // OKX Wallet
-  const isOKX = wallet?.adapter.name === 'Backpack';
+  // const isOKX = wallet?.adapter.name === 'Backpack';
+  const isOKX = true;
 
   return (
     <div className='min-h-screen'>
@@ -55,8 +57,7 @@ function AppContent() {
           className={`max-w-[560px] 2xl:max-w-[720px] mx-auto bg-white dark:bg-background-dark rounded-xl p-5 flex flex-col gap-7 shadow-[0px_0px_20px_0px_rgba(0,0,0,0.10)] dark:shadow-[0px_0px_20px_0px_rgba(0,0,0,0.10)] ${isDepositing ? '' : 'min-h-[776px]'}`}
         >
           {isDepositing ? (
-            // <DepositForm contractInfo={contractInfo} setIsDepositing={setIsDepositing} />
-            <div>DepositForm</div>
+            <DepositForm contractInfo={contractInfo} setIsDepositing={setIsDepositing} />
           ) : (
             <>
               <div className='w-full min-h-[120px] rounded-lg bg-[--primary]  p-5 flex flex-col items-start gap-7'>

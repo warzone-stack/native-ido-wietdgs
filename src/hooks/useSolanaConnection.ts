@@ -30,14 +30,21 @@ export function useSolanaConnection() {
     };
   };
 
-  const fetchTokenBalance = async (address: string) => {
-    if (address.toLowerCase() === SOL_MINT_ADDRESS.toLowerCase()) {
+  const fetchTokenBalance = async (mint: string | PublicKey | undefined) => {
+    if (!mint) {
+      throw new Error('please input mint');
+    }
+    const mintStr = mint.toString();
+    if (
+      mintStr.toLowerCase() === SOL_MINT_ADDRESS.toLowerCase() ||
+      mintStr.toLowerCase() === WSOL_MINT_ADDRESS.toLowerCase()
+    ) {
       return fetchSOLBalance();
     }
     if (!wallet.publicKey) {
       throw new Error('publicKey is undefined');
     }
-    const mintAccount = new PublicKey(address);
+    const mintAccount = new PublicKey(mintStr);
     const tokenAccounts = await connection.getTokenAccountsByOwner(wallet.publicKey, {
       mint: mintAccount,
     });
@@ -75,7 +82,6 @@ export function useSolanaConnection() {
       throw new Error('please input mint');
     }
     const mintStr = mint.toString();
-    console.log('mintStr', mintStr, chainId, symbol);
 
     if (
       mintStr.toUpperCase() === 'SOL' ||
@@ -110,7 +116,6 @@ export function useSolanaConnection() {
       throw new Error(`mint address not found: ${mintStr}`);
     }
     const data = MintLayout.decode(onlineInfo.data);
-    console.log('onlineInfo', onlineInfo, data);
 
     let mintSymbol = symbol ?? mintStr.toString().substring(0, 6);
     if (!symbol) {

@@ -1,59 +1,43 @@
+import { Cluster, PublicKey } from '@solana/web3.js';
+import { NATIVE_MINT } from '@solana/spl-token';
 import { useQuery } from '@tanstack/react-query';
 import BigNumber from 'bignumber.js';
-import { isNativeToken } from '../config/token';
-import { ChainId } from '../config/wagmi';
 import { TokenInfo } from '../types';
 
 /**
  * https://docs.coingecko.com/v3.0.1/reference/asset-platforms-list
  */
-export const ASSET_PLATFORMS = {
-  [ChainId.ETHEREUM]: {
-    id: 'ethereum',
-    chain_identifier: 1,
-    name: 'Ethereum',
-    shortname: 'Ethereum',
-    native_coin_id: 'ethereum',
+export const ASSET_PLATFORMS: Record<Cluster, any> = {
+  'mainnet-beta': {
+    id: 'solana',
+    chain_identifier: null,
+    name: 'Solana',
+    shortname: 'Solana',
+    native_coin_id: 'solana',
     image: {
       thumb:
-        'https://coin-images.coingecko.com/asset_platforms/images/279/thumb/ethereum.png?1706606803',
+        'https://coin-images.coingecko.com/asset_platforms/images/5/thumb/solana.png?1706606708',
       small:
-        'https://coin-images.coingecko.com/asset_platforms/images/279/small/ethereum.png?1706606803',
+        'https://coin-images.coingecko.com/asset_platforms/images/5/small/solana.png?1706606708',
       large:
-        'https://coin-images.coingecko.com/asset_platforms/images/279/large/ethereum.png?1706606803',
+        'https://coin-images.coingecko.com/asset_platforms/images/5/large/solana.png?1706606708',
     },
   },
-  [ChainId.SEPOLIA]: {
-    id: 'ethereum',
-    chain_identifier: 1,
-    name: 'Ethereum',
-    shortname: 'Ethereum',
-    native_coin_id: 'ethereum',
-    image: {
-      thumb:
-        'https://coin-images.coingecko.com/asset_platforms/images/279/thumb/ethereum.png?1706606803',
-      small:
-        'https://coin-images.coingecko.com/asset_platforms/images/279/small/ethereum.png?1706606803',
-      large:
-        'https://coin-images.coingecko.com/asset_platforms/images/279/large/ethereum.png?1706606803',
-    },
+  devnet: {
+    id: 'solana',
+    chain_identifier: null,
+    name: 'Solana',
+    shortname: 'Solana',
+    native_coin_id: 'solana',
   },
-  [ChainId.BSC]: {
-    id: 'binance-smart-chain',
-    chain_identifier: 56,
-    name: 'BNB Smart Chain',
-    shortname: 'BSC',
-    native_coin_id: 'binancecoin',
-    image: {
-      thumb:
-        'https://coin-images.coingecko.com/asset_platforms/images/1/thumb/bnb_smart_chain.png?1706606721',
-      small:
-        'https://coin-images.coingecko.com/asset_platforms/images/1/small/bnb_smart_chain.png?1706606721',
-      large:
-        'https://coin-images.coingecko.com/asset_platforms/images/1/large/bnb_smart_chain.png?1706606721',
-    },
+  testnet: {
+    id: 'solana',
+    chain_identifier: null,
+    name: 'Solana',
+    shortname: 'Solana',
+    native_coin_id: 'solana',
   },
-} as const;
+};
 
 export function useCryptoPrice(token: TokenInfo | undefined) {
   const { data, isLoading } = useQuery({
@@ -64,10 +48,6 @@ export function useCryptoPrice(token: TokenInfo | undefined) {
         return null;
       }
 
-      if (token.chainId === ChainId.SEPOLIA) {
-        return isNativeToken(token) ? new BigNumber(2000) : new BigNumber(100);
-      }
-
       const options = {
         method: 'GET',
         headers: {
@@ -76,7 +56,9 @@ export function useCryptoPrice(token: TokenInfo | undefined) {
         },
       };
 
-      const id = isNativeToken(token)
+      const isNativeToken = NATIVE_MINT.equals(new PublicKey(token.address));
+
+      const id = isNativeToken
         ? ASSET_PLATFORMS[token.chainId].native_coin_id
         : token.address.toLowerCase();
 
@@ -84,12 +66,17 @@ export function useCryptoPrice(token: TokenInfo | undefined) {
 
       const ethereumUrl = `https://api.coingecko.com/api/v3/simple/price?ids=${id}&vs_currencies=usd`;
 
-      const res = await fetch(isNativeToken(token) ? ethereumUrl : commonUrl, options);
+      const res = await fetch(isNativeToken ? ethereumUrl : commonUrl, options);
       const json = await res.json();
 
       if (json[id]?.usd) {
         return new BigNumber(json[id].usd as number);
       }
+
+      if (token.chainId === 'devnet') {
+        return new BigNumber(1);
+      }
+
       return null;
     },
   });

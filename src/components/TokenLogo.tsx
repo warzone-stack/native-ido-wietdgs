@@ -16,7 +16,7 @@ export const TokenLogo = ({ token, size = 40 }: TokenLogoProps) => {
 
   return (
     <div style={{ width: size, height: size }}>
-      <img src={token.image} alt={token.symbol} />
+      <img src={token.image} alt={token.name} />
     </div>
   );
 };
