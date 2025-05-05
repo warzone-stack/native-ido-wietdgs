@@ -17,3 +17,5 @@ export const TOKEN_METADATA_PROGRAM_ID = new PublicKey(
 
 export const SOL_MINT_ADDRESS = PublicKey.default.toBase58();
 export const WSOL_MINT_ADDRESS = NATIVE_MINT.toBase58();
+
+export const LOCK_DURATION = 3600 * 1;

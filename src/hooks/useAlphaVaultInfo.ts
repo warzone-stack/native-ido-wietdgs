@@ -92,7 +92,9 @@ export function useAlphaVaultInfo() {
 
   const totalTokensOffered = new BigNumber(10000);
   const poolInfo0 = {
-    raisingAmountPool: new BigNumber(5000),
+    raisingAmountPool: vault
+      ? new BigNumber(vault.vault.maxBuyingCap.toString()).div(`1e${lpToken0?.decimals}`)
+      : new BigNumber(0),
     offeringAmountPool: new BigNumber(10000),
     capPerUserInLP: new BigNumber(10),
     totalAmountPool: vault
