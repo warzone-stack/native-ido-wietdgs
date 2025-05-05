@@ -111,14 +111,14 @@ export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
         console.log(
           'startVestingPoint:',
           BN.isBN(vault.vault.startVestingPoint)
-            ? vault.vault.startVestingPoint.toString()
+            ? new Date(vault.vault.startVestingPoint.toNumber() * 1000).toLocaleString()
             : vault.vault.startVestingPoint
         );
         // endVestingPoint: 结束释放时间戳 (End vesting timestamp)
         console.log(
           'endVestingPoint:',
           BN.isBN(vault.vault.endVestingPoint)
-            ? vault.vault.endVestingPoint.toString()
+            ? new Date(vault.vault.endVestingPoint.toNumber() * 1000).toLocaleString()
             : vault.vault.endVestingPoint
         );
         // bump: bump 值 (Bump value)

@@ -137,5 +137,8 @@ Done
 
 ```物料 
 devnet 
-8PCjMuYBpWdjadterCxZmiSYg419GJFJEgHbtwZE81p2 已结束
+8PCjMuYBpWdjadterCxZmiSYg419GJFJEgHbtwZE81p2 ended
+7wXwxQPKQ2rKuoEVbB88iMppbCVFfRU15TkGyofHcpMg
+
+HULWmq435HcurzM59tfC4p9txUF71gZH6ghFVSsmWGQY FCFS
 ```
