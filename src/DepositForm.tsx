@@ -1,10 +1,14 @@
 import { BN } from '@coral-xyz/anchor';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
+import { PublicKey } from '@solana/web3.js';
 import { useMutation } from '@tanstack/react-query';
 import BigNumber from 'bignumber.js';
 import { useContext, useMemo, useState } from 'react';
+import { PROGRAM_ID } from './alpha-vault/constant';
+import { deriveMerkleRootConfig } from './alpha-vault/helper';
 import { TokenLogo } from './components/TokenLogo';
+import { CLUSTER } from './config/contracts';
 import { formatTokenAmount } from './config/number';
 import { useAlphaVaultInfo } from './hooks/useAlphaVaultInfo';
 import { VaultContext } from './solana/VaultContext';
@@ -19,7 +23,8 @@ export const DepositForm = ({ contractInfo, setIsDepositing }: DepositFormProps)
   const { setVisible } = useWalletModal();
   const { connection } = useConnection();
 
-  const { vault, refetchVault } = useContext(VaultContext);
+  const { vault, refetchVault, nativeDepositCap, depositCap, depositorProof } =
+    useContext(VaultContext);
 
   const [depositAmount, setDepositAmount] = useState<string>('');
 
@@ -29,7 +34,7 @@ export const DepositForm = ({ contractInfo, setIsDepositing }: DepositFormProps)
     isPending: depositIsPending,
   } = useMutation({
     mutationFn: async () => {
-      if (!vault || !publicKey || !wallet) {
+      if (!vault || !publicKey || !wallet || !depositorProof || !nativeDepositCap) {
         return;
       }
 
@@ -41,10 +46,20 @@ export const DepositForm = ({ contractInfo, setIsDepositing }: DepositFormProps)
           .dp(0, BigNumber.ROUND_DOWN)
           .toString()
       );
-      const claimTx = await vault.deposit(depositAmountBN, publicKey);
+      const [merkleRootConfig] = deriveMerkleRootConfig(
+        vault.pubkey,
+        new BN(0),
+        new PublicKey(PROGRAM_ID[CLUSTER])
+      );
 
-      console.log('Claiming bought token', claimTx);
-      const txHash = await wallet.adapter.sendTransaction(claimTx, connection);
+      const depositTx = await vault.deposit(depositAmountBN, publicKey, {
+        merkleRootConfig,
+        maxCap: nativeDepositCap,
+        proof: depositorProof,
+      });
+
+      console.log('Claiming bought token', depositTx);
+      const txHash = await wallet.adapter.sendTransaction(depositTx, connection);
       console.log('txHash', txHash);
 
       const latestBlockhash = await connection.getLatestBlockhash();
@@ -79,10 +94,19 @@ export const DepositForm = ({ contractInfo, setIsDepositing }: DepositFormProps)
       !contractInfo ||
       !contractInfo.lpToken0 ||
       !contractInfo.lpToken0.address ||
-      !contractInfo.lpToken0.decimals
+      !contractInfo.lpToken0.decimals ||
+      depositorProof == undefined ||
+      depositCap == undefined
     ) {
       return {
         text: 'Deposit',
+        disabled: true,
+      };
+    }
+
+    if (contractInfo.userInfo.amountPool.gte(depositCap)) {
+      return {
+        text: 'Deposit cap reached',
         disabled: true,
       };
     }
@@ -102,6 +126,20 @@ export const DepositForm = ({ contractInfo, setIsDepositing }: DepositFormProps)
       };
     }
 
+    if (depositAmountBN.gt(depositCap)) {
+      return {
+        text: 'Deposit cap reached',
+        disabled: true,
+      };
+    }
+
+    if (depositAmountBN.plus(contractInfo.userInfo.amountPool).gt(depositCap)) {
+      return {
+        text: 'Deposit cap reached',
+        disabled: true,
+      };
+    }
+
     if (depositIsPending) {
       return {
         text: 'Depositing...',
@@ -116,7 +154,16 @@ export const DepositForm = ({ contractInfo, setIsDepositing }: DepositFormProps)
         deposit();
       },
     };
-  }, [contractInfo, deposit, depositAmount, depositIsPending, publicKey, setVisible]);
+  }, [
+    contractInfo,
+    deposit,
+    depositAmount,
+    depositIsPending,
+    depositorProof,
+    depositCap,
+    publicKey,
+    setVisible,
+  ]);
 
   return (
     <>
@@ -192,6 +239,18 @@ export const DepositForm = ({ contractInfo, setIsDepositing }: DepositFormProps)
             </div>
           </div>
         </div>
+
+        {depositCap && (
+          <div className='text-green-500 text-xs bg-green-500/10 rounded-lg p-2 flex items-center gap-2 justify-center'>
+            Deposit cap:{' '}
+            {formatTokenAmount(
+              depositCap.minus(contractInfo.userInfo.amountPool),
+              contractInfo.lpToken0?.decimals
+            )}
+            &nbsp;
+            {contractInfo.lpToken0?.symbol ?? ''}
+          </div>
+        )}
         <button
           className='w-full min-h-14 btn-primary text-base font-semibold px-12'
           onClick={depositBtn.onClick}
@@ -199,6 +258,7 @@ export const DepositForm = ({ contractInfo, setIsDepositing }: DepositFormProps)
         >
           {depositBtn.text}
         </button>
+
         {error && <div className='text-red-500 text-xs'>Error: {error.message}</div>}
       </div>
     </>

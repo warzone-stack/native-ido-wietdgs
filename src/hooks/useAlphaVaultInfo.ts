@@ -113,10 +113,10 @@ Time window in step 3 and 4 is fixed, cannot be modified through parameter
   const endTimestamp = activation_point - buffer - buffer / 12;
   const claimStartTimestamp = activation_point + 1;
 
-  console.log('now:', now);
-  console.log('startTimestamp:', startTimestamp);
-  console.log('endTimestamp:', endTimestamp);
-  console.log('claimStartTimestamp:', claimStartTimestamp);
+  // console.log('now:', now);
+  // console.log('startTimestamp:', startTimestamp);
+  // console.log('endTimestamp:', endTimestamp);
+  // console.log('claimStartTimestamp:', claimStartTimestamp);
   //   now: 1746590460
   //  startTimestamp: 1746590400
   //  endTimestamp: 1746593700

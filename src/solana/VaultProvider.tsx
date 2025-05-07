@@ -1,15 +1,20 @@
 import { BN } from '@coral-xyz/anchor';
-import { useConnection } from '@solana/wallet-adapter-react';
+import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { PublicKey } from '@solana/web3.js';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import Decimal from 'decimal.js';
 import { useCallback } from 'react';
 import { AlphaVault } from '../alpha-vault';
+import { createMerkleTree, loadWhitelistWalletCsv } from '../alpha-vault/utils';
 import { ACTIVATION_POINT, VAULT_ADDRESS } from '../config/contracts';
 import { VaultContext } from './VaultContext';
+import BigNumber from 'bignumber.js';
 
 export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
+  const { publicKey } = useWallet();
   const { connection } = useConnection();
   const client = useQueryClient();
+
   const { data: vault } = useQuery({
     queryKey: ['vault', VAULT_ADDRESS],
     queryFn: async () => {
@@ -196,6 +201,60 @@ export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
     refetchInterval: 15000,
   });
 
+  const { data } = useQuery({
+    queryKey: ['merkleTree', publicKey?.toBase58(), VAULT_ADDRESS],
+    enabled: !!vault && !!publicKey,
+    queryFn: async () => {
+      if (!vault || !publicKey) {
+        return {
+          depositCap: undefined,
+          nativeDepositCap: undefined,
+          depositorProof: undefined,
+        };
+      }
+
+      try {
+        // 1. Load whitelisted wallet
+        const whitelistedWallets = await loadWhitelistWalletCsv('/whitelist_wallet.csv');
+
+        // 2. Create merkle tree
+        const tree = await createMerkleTree(connection, vault, whitelistedWallets);
+
+        // 3. Get wallet proof info
+        const depositorWhitelistInfo = whitelistedWallets.find((w) => w.wallet.equals(publicKey));
+        if (!depositorWhitelistInfo) {
+          return {
+            depositCap: undefined,
+            nativeDepositCap: undefined,
+            depositorProof: undefined,
+          };
+        }
+
+        const quoteMint = await connection.getTokenSupply(vault.vault.quoteMint);
+        const toNativeAmountMultiplier = new Decimal(10 ** quoteMint.value.decimals);
+        const nativeDepositCap = new BN(
+          depositorWhitelistInfo.depositCap.mul(toNativeAmountMultiplier).toString()
+        );
+        const depositorProof = tree.getProof(publicKey, nativeDepositCap).map((buffer) => {
+          return Array.from(new Uint8Array(buffer));
+        });
+
+        return {
+          depositCap: new BigNumber(depositorWhitelistInfo.depositCap.toString()),
+          nativeDepositCap,
+          depositorProof,
+        };
+      } catch (error) {
+        console.error('Error::getMerkleProof', error);
+        return {
+          depositCap: undefined,
+          nativeDepositCap: undefined,
+          depositorProof: undefined,
+        };
+      }
+    },
+  });
+
   const refetchVault = useCallback(() => {
     client.invalidateQueries({
       queryKey: ['vault'],
@@ -205,5 +264,17 @@ export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
     });
   }, [client]);
 
-  return <VaultContext.Provider value={{ vault, refetchVault }}>{children}</VaultContext.Provider>;
+  return (
+    <VaultContext.Provider
+      value={{
+        vault,
+        refetchVault,
+        depositCap: data?.depositCap,
+        nativeDepositCap: data?.nativeDepositCap,
+        depositorProof: data?.depositorProof,
+      }}
+    >
+      {children}
+    </VaultContext.Provider>
+  );
 };
