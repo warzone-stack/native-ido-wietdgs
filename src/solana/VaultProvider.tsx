@@ -118,6 +118,8 @@ export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
             ? new Date(vault.vault.depositingPoint.toNumber() * 1000).toLocaleString()
             : vault.vault.depositingPoint
         );
+        // 1746597600
+        console.log('activationPoint:', new Date(1746615900 * 1000).toLocaleString());
         // startVestingPoint: 开始释放时间戳 (Start vesting timestamp)
         console.log(
           'startVestingPoint:',

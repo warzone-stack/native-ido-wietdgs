@@ -59,6 +59,13 @@ export const ClaimForm = ({ contractInfo }: ClaimFormProps) => {
       };
     }
 
+    if (contractInfo.claimStartTimestamp > contractInfo.now) {
+      return {
+        disabled: true,
+        text: 'Claim not started',
+      };
+    }
+
     if (
       !contractInfo.userInfo ||
       !contractInfo.userInfo.userOfferingAmountPool ||
@@ -84,7 +91,14 @@ export const ClaimForm = ({ contractInfo }: ClaimFormProps) => {
         claim();
       },
     };
-  }, [claim, claimIsPending, contractInfo.status, contractInfo.userInfo]);
+  }, [
+    claim,
+    claimIsPending,
+    contractInfo.claimStartTimestamp,
+    contractInfo.now,
+    contractInfo.status,
+    contractInfo.userInfo,
+  ]);
 
   return (
     <div className='flex flex-col gap-[10px] items-stretch'>

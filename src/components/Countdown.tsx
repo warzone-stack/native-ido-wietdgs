@@ -11,6 +11,7 @@ export function Countdown({ title, endTime }: CountdownProps) {
   useEffect(() => {
     const calculateTimeLeft = () => {
       const now = new Date();
+      // const now = new Date((1746593700 + 60) * 1000);
       const difference = endTime.getTime() - now.getTime();
 
       if (difference <= 0) {

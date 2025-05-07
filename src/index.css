@@ -10,9 +10,13 @@ html body {
 }
 
 html.dark body {
-  background:
-    linear-gradient(180deg, #2b2e35, rgba(43, 46, 53, 0.2) 50%, rgba(245, 207, 101, 0.2) 100%),
-    #2b2e35;
+  background-image: url('/bg.png');
+  background-size: cover;
+  background-position-x: center;
+  background-position-y: top;
+  background-repeat: no-repeat;
+  min-height: 100vh;
+  position: relative;
 }
 
 @layer base {
