@@ -4,7 +4,7 @@ import { PublicKey } from '@solana/web3.js';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback } from 'react';
 import { AlphaVault } from '../alpha-vault';
-import { VAULT_ADDRESS } from '../config/contracts';
+import { ACTIVATION_POINT, VAULT_ADDRESS } from '../config/contracts';
 import { VaultContext } from './VaultContext';
 
 export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
@@ -119,10 +119,15 @@ export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
             : vault.vault.depositingPoint
         );
         // 1746597600
-        console.log('activationPoint:', new Date(1746615900 * 1000).toLocaleString());
+        console.log(
+          'activationPoint:',
+          ACTIVATION_POINT,
+          new Date(ACTIVATION_POINT * 1000).toLocaleString()
+        );
         // startVestingPoint: 开始释放时间戳 (Start vesting timestamp)
         console.log(
           'startVestingPoint:',
+          vault.vault.startVestingPoint?.toNumber(),
           BN.isBN(vault.vault.startVestingPoint)
             ? new Date(vault.vault.startVestingPoint.toNumber() * 1000).toLocaleString()
             : vault.vault.startVestingPoint
@@ -130,6 +135,7 @@ export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
         // endVestingPoint: 结束释放时间戳 (End vesting timestamp)
         console.log(
           'endVestingPoint:',
+          vault.vault.endVestingPoint?.toNumber(),
           BN.isBN(vault.vault.endVestingPoint)
             ? new Date(vault.vault.endVestingPoint.toNumber() * 1000).toLocaleString()
             : vault.vault.endVestingPoint

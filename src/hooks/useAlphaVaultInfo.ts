@@ -4,7 +4,7 @@ import { PublicKey } from '@solana/web3.js';
 import { useQuery } from '@tanstack/react-query';
 import BigNumber from 'bignumber.js';
 import { useContext, useEffect, useState } from 'react';
-import { CLUSTER } from '../config/contracts';
+import { ACTIVATION_POINT, CLUSTER, TOTAL_OFFERED } from '../config/contracts';
 import { VaultContext } from '../solana/VaultContext';
 import { useTokenInfo } from './useTokenInfo';
 import { useCryptoPrice } from './useCryptoPrice';
@@ -14,8 +14,9 @@ export type IDOStatus = 'not_started' | 'in_progress' | 'ended';
 
 // CONFIG
 // https://solscan.io/tx/2RueuEtqn9VbNmpN2UQmW5whPn4PH7A8SBq77CLKjZkMsDqTieLgP2ScofpTZpoMFLaW58iDEkXGX1JphJ4jt6xb?cluster=devnet
-const totalTokensOffered = new BigNumber(100);
-const activation_point = 1746626100;
+
+const totalTokensOffered = new BigNumber(TOTAL_OFFERED);
+const activation_point = ACTIVATION_POINT;
 
 export function useAlphaVaultInfo() {
   const { vault } = useContext(VaultContext);
@@ -68,7 +69,6 @@ export function useAlphaVaultInfo() {
   const { data: offeringTokenUSD, isLoading: offeringTokenUSDLoading } =
     useCryptoPrice(offeringToken);
 
-  // const [now, setNow] = useState(1746593700 + 60);
   const [now, setNow] = useState(() => {
     return Math.floor(Date.now() / 1000);
   });

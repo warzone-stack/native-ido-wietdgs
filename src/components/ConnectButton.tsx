@@ -13,7 +13,7 @@ export const ConnectOKXButton = ({ isOKX }: ConnectButtonProps) => {
     return (
       <button
         onClick={() => setVisible(true)}
-        className='w-full min-h-10 btn-primary text-base font-semibold'
+        className='w-full min-h-12 btn-primary text-base font-semibold'
       >
         Connect with OKX Wallet
       </button>
@@ -54,7 +54,7 @@ export const ConnectOKXButton = ({ isOKX }: ConnectButtonProps) => {
         </div>
         <button
           onClick={() => disconnect()}
-          className='w-full min-h-10 btn-bordered text-base font-semibold'
+          className='w-full min-h-12 btn-bordered text-base font-semibold'
         >
           Disconnect Wallet
         </button>

@@ -82,28 +82,24 @@ html.dark body {
 
 /* Custom button styles */
 button {
-  @apply border-transparent rounded-[40px] text-sm font-medium transition-colors;
-}
-
-button:disabled {
-  @apply opacity-50 cursor-not-allowed;
+  @apply border-transparent rounded-[12px] md:rounded-[40px] text-sm font-medium transition-colors hover:opacity-60;
 }
 
 /* Primary button */
 .btn-primary {
-  @apply bg-primary text-black hover:bg-primary/90;
+  @apply bg-primary text-black dark:bg-background-light hover:opacity-60;
 }
 
 .btn-primary:disabled {
-  @apply bg-primary/40 text-black/40 hover:bg-primary/40 cursor-not-allowed;
+  @apply bg-primary/40 text-black/40 cursor-not-allowed dark:bg-background-light hover:opacity-100;
 }
 
 .btn-bordered {
-  @apply border-solid border border-[#000000] text-[#000000] hover:bg-[#000000]/10;
+  @apply border-solid border dark:border-background-light dark:text-white hover:opacity-60;
 }
 
 .btn-bordered:disabled {
-  @apply border-[#00000040] text-[#00000040] hover:bg-transparent cursor-not-allowed;
+  @apply border-[#00000040] text-[#00000040] cursor-not-allowed dark:border-text-secondary dark:text-text-secondary hover:opacity-100;
 }
 
 /* Success button */

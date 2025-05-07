@@ -2,6 +2,7 @@ import { Cluster, PublicKey } from '@solana/web3.js';
 import { useQuery } from '@tanstack/react-query';
 import { useSolanaConnection } from './useSolanaConnection';
 import { useEffect } from 'react';
+import { useWallet } from '@solana/wallet-adapter-react';
 
 export function useTokenInfo({
   mint,
@@ -12,6 +13,7 @@ export function useTokenInfo({
   chainId: Cluster;
   symbol?: string;
 }) {
+  const wallet = useWallet();
   const { fetchTokenInfo, fetchTokenBalance } = useSolanaConnection();
 
   const tokenInfoQuery = useQuery({
@@ -28,7 +30,7 @@ export function useTokenInfo({
   });
 
   const tokenBalanceQuery = useQuery({
-    queryKey: ['token', 'balance', mint],
+    queryKey: ['token', 'balance', mint, wallet.publicKey?.toBase58()],
     queryFn: async () => {
       const result = await fetchTokenBalance(mint);
       return result;
