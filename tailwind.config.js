@@ -29,10 +29,13 @@ export default {
         background: {
           light: '#FFFFFF',
           dark: '#212226',
+          paper: '#1E1F25',
+          border: 'rgba(255, 255, 255, 0.10)',
         },
         text: {
           light: '#000',
           dark: '#FFFFFF',
+          secondary: 'rgba(255, 255, 255, 0.50)',
         },
       },
       borderRadius: {

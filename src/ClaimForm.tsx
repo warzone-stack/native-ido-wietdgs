@@ -62,7 +62,7 @@ export const ClaimForm = ({ contractInfo }: ClaimFormProps) => {
     if (contractInfo.claimStartTimestamp > contractInfo.now) {
       return {
         disabled: true,
-        text: 'Claim not started',
+        text: 'Claim',
       };
     }
 
@@ -116,7 +116,7 @@ export const ClaimForm = ({ contractInfo }: ClaimFormProps) => {
         </div>
 
         <button
-          className='min-h-12 min-w-[160px] btn-bordered text-base font-semibold px-12'
+          className='min-h-12 min-w-[80px] md:min-w-[160px] btn-bordered text-base font-semibold px-2 md:px-12'
           disabled={claimBtn.disabled}
           onClick={claimBtn.onClick}
         >

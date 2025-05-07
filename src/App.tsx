@@ -1,39 +1,21 @@
-import { useConnection, useWallet } from '@solana/wallet-adapter-react';
-import { LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { ClaimForm } from './ClaimForm';
-import { ChainSwitcher } from './components/ChainSwitcher';
 import { ConnectOKXButton } from './components/ConnectButton';
 import { Countdown } from './components/Countdown';
 import { Header } from './components/Header';
 import { TokenLogo } from './components/TokenLogo';
-import { VAULT_ADDRESS } from './config/contracts';
 import { formatTokenAmount } from './config/number';
 import { SOCIAL_LINKS } from './config/site';
 import { DepositForm } from './DepositForm';
 import { useAlphaVaultInfo } from './hooks/useAlphaVaultInfo';
 import { VaultProvider } from './solana/VaultProvider';
 import { SolanaWalletContextProvider } from './solana/WalletProvider';
-import { generateSolScanLink } from './utils';
 
 const queryClient = new QueryClient();
 
 function AppContent() {
-  const { wallet, publicKey } = useWallet();
-  const { connection } = useConnection();
-
   const contractInfo = useAlphaVaultInfo();
-
-  const [balance, setBalance] = useState<number | null>(null);
-
-  useEffect(() => {
-    if (publicKey) {
-      connection.getBalance(publicKey).then((balance) => {
-        setBalance(balance / LAMPORTS_PER_SOL);
-      });
-    }
-  }, [connection, publicKey]);
 
   const [isDepositing, setIsDepositing] = useState(false);
 
@@ -52,42 +34,15 @@ function AppContent() {
     <>
       <div className='max-h-screen overflow-y-auto'>
         <Header />
-        <main className='pt-16 px-5 mt-5 pb-10'>
+        <main className='px-4 md:px-5 mt-5 pb-10'>
           <div
-            className={`max-w-[560px] 2xl:max-w-[720px] mx-auto bg-white dark:bg-background-dark rounded-xl p-5 flex flex-col gap-7 shadow-[0px_0px_20px_0px_rgba(0,0,0,0.10)] dark:shadow-[0px_0px_20px_0px_rgba(0,0,0,0.10)] ${isDepositing ? '' : 'min-h-[776px]'}`}
+            className={`max-w-[560px] 2xl:max-w-[720px] mx-auto bg-white dark:bg-background-paper rounded-xl p-5 flex flex-col gap-7 shadow-[0px_0px_20px_0px_rgba(0,0,0,0.10)] dark:shadow-[0px_0px_20px_0px_rgba(0,0,0,0.10)] ${isDepositing ? '' : 'min-h-[776px]'}`}
           >
             {isDepositing ? (
               <DepositForm contractInfo={contractInfo} setIsDepositing={setIsDepositing} />
             ) : (
               <>
-                <div className='w-full min-h-[120px] rounded-lg bg-[--primary]  p-5 flex flex-col items-start gap-7'>
-                  <p>{connection.rpcEndpoint}</p>
-                  <p>
-                    Account:{' '}
-                    <a
-                      className='break-all text-blue-500 underline'
-                      href={generateSolScanLink(publicKey)}
-                      target='_blank'
-                      rel='noopener noreferrer'
-                    >
-                      {publicKey?.toBase58()}
-                    </a>
-                  </p>
-                  <p>Account Balance: {balance} SOL</p>
-                  <p>
-                    Vault:{' '}
-                    <a
-                      className='break-all text-blue-500 underline'
-                      href={generateSolScanLink(VAULT_ADDRESS)}
-                      target='_blank'
-                      rel='noopener noreferrer'
-                    >
-                      {VAULT_ADDRESS.toBase58()}
-                    </a>
-                  </p>
-                </div>
-
-                <ChainSwitcher />
+                <div className='w-full min-h-[120px] rounded-lg bg-[url("/images/banner.png")] bg-cover bg-center bg-no-repeat' />
 
                 {contractInfo.status === 'ended' ? (
                   contractInfo.claimStartTimestamp > contractInfo.now ? (
@@ -97,7 +52,7 @@ function AppContent() {
                     />
                   ) : (
                     <div className='flex items-center justify-center gap-1 text-base font-semibold'>
-                      <div className='py-2 px-4 rounded-[40px] bg-[#0000001A] dark:bg-background-dark'>
+                      <div className='py-2 px-4 rounded-[40px] bg-[#0000001A] dark:bg-background-border'>
                         Finished
                       </div>
                     </div>
@@ -121,8 +76,8 @@ function AppContent() {
                 {contractInfo.status === 'not_started' && <ConnectOKXButton isOKX={isOKX} />}
 
                 {(contractInfo.status === 'in_progress' || contractInfo.status === 'ended') && (
-                  <div className='flex flex-col gap-5 items-stretch p-5 rounded-lg border border-[#0000001A] dark:border-gray-800'>
-                    <div className='opacity-50'>
+                  <div className='flex flex-col gap-5 items-stretch p-5 rounded-lg border border-[#0000001A] dark:border-background-border'>
+                    <div className='dark:text-white'>
                       {contractInfo.status === 'ended' ? (
                         'Claim Purchased Tokens'
                       ) : (
@@ -147,7 +102,7 @@ function AppContent() {
 
                           <button
                             onClick={() => setIsDepositing(true)}
-                            className='min-h-12 min-w-[160px] btn-primary text-base font-semibold px-12'
+                            className='min-h-12 min-w-[80px] md:min-w-[160px] btn-primary text-base font-semibold px-2 md:px-12'
                             disabled={!isOKX}
                           >
                             Deposit
@@ -248,7 +203,7 @@ function AppContent() {
                       contractInfo.poolInfo0.totalAmountPool.gt(
                         contractInfo.poolInfo0.raisingAmountPool
                       ) && (
-                        <div className='flex flex-col gap-[10px] items-center p-4 rounded-lg bg-[#27EBAD1A] dark:bg-gray-800'>
+                        <div className='flex flex-col gap-[10px] items-center p-4 rounded-lg bg-[#27EBAD1A] dark:bg-[rgba(39, 235, 173, 0.10)]'>
                           <div className='text-[40px] leading-[48px] font-medium'>🎉</div>
                           <div className='flex items-center justify-center gap-[2px] text-sm font-medium'>
                             {contractInfo.poolInfo0.totalAmountPool
@@ -267,7 +222,7 @@ function AppContent() {
                                 fill-rule='evenodd'
                                 clip-rule='evenodd'
                                 d='M8.00065 1.8335C4.32065 1.8335 1.33398 4.82016 1.33398 8.50016C1.33398 12.1802 4.32065 15.1668 8.00065 15.1668C11.6807 15.1668 14.6673 12.1802 14.6673 8.50016C14.6673 4.82016 11.6807 1.8335 8.00065 1.8335ZM8.66748 5.16688H7.33415V6.50021H8.66748V5.16688ZM8.66748 7.83355H7.33415V11.8335H8.66748V7.83355ZM2.66797 8.5002C2.66797 11.4402 5.0613 13.8335 8.0013 13.8335C10.9413 13.8335 13.3346 11.4402 13.3346 8.5002C13.3346 5.5602 10.9413 3.16687 8.0013 3.16687C5.0613 3.16687 2.66797 5.5602 2.66797 8.5002Z'
-                                fill='black'
+                                fill='white'
                               />
                             </svg>
                           </div>
@@ -277,7 +232,7 @@ function AppContent() {
                 )}
 
                 {contractInfo.status === 'ended' ? null : (
-                  <div className='flex flex-col gap-4 items-stretch p-5 rounded-lg border border-[#0000001A] dark:border-gray-800'>
+                  <div className='flex flex-col gap-4 items-stretch p-5 rounded-lg border border-[#0000001A] dark:border-background-border'>
                     <div className='opacity-50'>Total Offering</div>
                     <div className='flex gap-1 gap-[10px] items-center'>
                       <TokenLogo token={contractInfo.offeringToken} />
@@ -304,7 +259,7 @@ function AppContent() {
                   </div>
                 )}
 
-                <div className='flex flex-col gap-5 items-stretch p-5 rounded-lg border border-[#0000001A] dark:border-gray-800'>
+                <div className='flex flex-col gap-5 items-stretch p-5 rounded-lg border border-[#0000001A] dark:border-background-border'>
                   {contractInfo.status === 'ended' ? (
                     <div className='flex items-center gap-2'>
                       <button
@@ -325,7 +280,7 @@ function AppContent() {
                             '_blank'
                           );
                         }}
-                        className='w-full basis-64 min-h-14 btn-bordered text-base font-semibold'
+                        className='w-full basis-64 min-h-14 btn-bordered font-semibold'
                       >
                         Trade {contractInfo.offeringToken?.symbol ?? ''}
                       </button>
@@ -350,7 +305,7 @@ function AppContent() {
                             '_blank'
                           );
                         }}
-                        className='w-full min-h-14 btn-bordered text-base font-semibold'
+                        className='w-full min-h-14 btn-bordered font-semibold'
                       >
                         Campaign Details
                       </button>
@@ -377,7 +332,7 @@ function AppContent() {
                       <a
                         href={link.url}
                         key={link.name}
-                        className='w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800'
+                        className='w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 dark:bg-background-border hover:opacity-60'
                         target='_blank'
                         rel='noopener noreferrer'
                       >
@@ -392,9 +347,9 @@ function AppContent() {
         </main>
       </div>
 
-      <div className='absolute w-[200px] h-[360px] bottom-0 left-0 dark:bg-[url("/images/left-banner.png")] bg-cover bg-center bg-no-repeat' />
+      <div className='absolute w-[200px] h-[360px] bottom-0 left-0 dark:bg-[url("/images/left-banner.png")] bg-cover bg-center bg-no-repeat z-[-1]' />
 
-      <div className='absolute w-[200px] h-[360px] bottom-0 right-0 dark:bg-[url("/images/right-banner.png")] bg-cover bg-center bg-no-repeat' />
+      <div className='absolute w-[200px] h-[360px] bottom-0 right-0 dark:bg-[url("/images/right-banner.png")] bg-cover bg-center bg-no-repeat z-[-1]' />
     </>
   );
 }

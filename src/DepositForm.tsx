@@ -121,7 +121,7 @@ export const DepositForm = ({ contractInfo, setIsDepositing }: DepositFormProps)
   return (
     <>
       <button
-        className='w-full flex items-center justify-start gap-[10px] text-black hover:text-gray-500'
+        className='w-full flex items-center justify-start gap-[10px] text-black hover:text-gray-500 dark:text-white hover:dark:text-white/50'
         onClick={() => setIsDepositing(false)}
       >
         <svg
@@ -141,7 +141,7 @@ export const DepositForm = ({ contractInfo, setIsDepositing }: DepositFormProps)
         </div>
       </button>
       <div className='flex flex-col gap-5 items-stretch'>
-        <div className='flex flex-col items-stretch gap-[10px] p-5 rounded-lg bg-[#0000001A] dark:bg-gray-800'>
+        <div className='flex flex-col items-stretch gap-[10px] p-5 rounded-lg bg-[#0000001A] dark:bg-background-border'>
           <div className='flex items-end justify-between'>
             <div className='flex flex-col items-start gap-[10px]'>
               <div className='text-base font-medium opacity-50'>Amount</div>
@@ -156,7 +156,7 @@ export const DepositForm = ({ contractInfo, setIsDepositing }: DepositFormProps)
               />
             </div>
             <div className='flex flex-col items-end gap-[10px]'>
-              <div className='flex items-center gap-2 p-2 rounded-sm bg-[#0000001A] dark:bg-background-dark'>
+              <div className='flex items-center gap-2 p-2 rounded-sm bg-[#0000001A] dark:bg-background-border'>
                 <TokenLogo token={contractInfo.lpToken0} size={24} />
                 <div className='text-base font-semibold'>{contractInfo.lpToken0?.symbol ?? ''}</div>
               </div>

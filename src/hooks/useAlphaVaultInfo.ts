@@ -68,7 +68,6 @@ export function useAlphaVaultInfo() {
   const { data: offeringTokenUSD, isLoading: offeringTokenUSDLoading } =
     useCryptoPrice(offeringToken);
 
-  // const [now, setNow] = useState(1746593700 + 60);
   const [now, setNow] = useState(() => {
     return Math.floor(Date.now() / 1000);
   });

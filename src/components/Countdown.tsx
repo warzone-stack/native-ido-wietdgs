@@ -38,11 +38,11 @@ export function Countdown({ title, endTime }: CountdownProps) {
   return (
     <div className='flex items-center justify-center gap-1 text-base font-semibold'>
       <div>{title}</div>
-      <div className='p-2 rounded-sm bg-[#0000001A] dark:bg-background-dark'>
+      <div className='p-2 rounded-sm bg-[#0000001A] dark:bg-background-border'>
         {String(timeLeft.hours).padStart(2, '0')}
       </div>
       <div>：</div>
-      <div className='p-2 rounded-sm bg-[#0000001A] dark:bg-background-dark'>
+      <div className='p-2 rounded-sm bg-[#0000001A] dark:bg-background-border'>
         {String(timeLeft.minutes).padStart(2, '0')}
       </div>
     </div>
