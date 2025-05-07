@@ -14,6 +14,7 @@ export type IDOStatus = 'not_started' | 'in_progress' | 'ended';
 
 // CONFIG
 // https://solscan.io/tx/2RueuEtqn9VbNmpN2UQmW5whPn4PH7A8SBq77CLKjZkMsDqTieLgP2ScofpTZpoMFLaW58iDEkXGX1JphJ4jt6xb?cluster=devnet
+
 const totalTokensOffered = new BigNumber(TOTAL_OFFERED);
 const activation_point = ACTIVATION_POINT;
 
