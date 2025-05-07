@@ -33,7 +33,7 @@ export function useAlphaVaultInfo() {
   });
 
   const { data: escrowInfo } = useQuery({
-    queryKey: ['vault', 'getEscrow', vault?.vault.totalEscrow, publicKey],
+    queryKey: ['vault', 'getEscrow', vault?.vault.totalEscrow, publicKey, offeringToken, lpToken0],
     queryFn: async () => {
       if (!vault || !publicKey || !offeringToken || !lpToken0) {
         return null;
@@ -72,7 +72,7 @@ export function useAlphaVaultInfo() {
         claimable,
       };
     },
-    enabled: !!vault && !!publicKey,
+    enabled: !!vault && !!publicKey && !!offeringToken && !!lpToken0,
   });
 
   const { data: lpToken0USD, isLoading: lpToken0USDLoading } = useCryptoPrice(lpToken0);
