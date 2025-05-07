@@ -4,11 +4,11 @@ import { PublicKey } from '@solana/web3.js';
 import { useQuery } from '@tanstack/react-query';
 import BigNumber from 'bignumber.js';
 import { useContext, useEffect, useState } from 'react';
+import { ActivationType } from '../alpha-vault/type';
 import { ACTIVATION_POINT, CLUSTER, TOTAL_OFFERED } from '../config/contracts';
 import { VaultContext } from '../solana/VaultContext';
-import { useTokenInfo } from './useTokenInfo';
 import { useCryptoPrice } from './useCryptoPrice';
-import { ActivationType } from '../alpha-vault/type';
+import { useTokenInfo } from './useTokenInfo';
 
 export type IDOStatus = 'not_started' | 'in_progress' | 'ended';
 
@@ -20,40 +20,7 @@ const activation_point = ACTIVATION_POINT;
 
 export function useAlphaVaultInfo() {
   const { vault } = useContext(VaultContext);
-  const { wallet, publicKey } = useWallet();
-
-  const { data: escrowInfo } = useQuery({
-    queryKey: ['vault', 'getEscrow', vault?.vault.totalEscrow, publicKey],
-    queryFn: async () => {
-      if (!vault || !publicKey) {
-        return null;
-      }
-      const escrow = await vault.getEscrow(publicKey);
-      console.log('escrow claimedToken:', escrow?.claimedToken.toString());
-      console.log('escrow totalDeposit:', escrow?.totalDeposit.toString());
-      console.log('escrow lastClaimedPoint:', escrow?.lastClaimedPoint.toString());
-      console.log('escrow maxCap:', escrow?.maxCap.toString());
-      console.log('escrow vault:', escrow?.vault.toString());
-
-      const depositInfo = await vault.getDepositInfo(escrow);
-      console.log('depositInfo totalDeposit', depositInfo.totalDeposit.toString());
-      console.log('depositInfo totalFilled', depositInfo.totalFilled.toString());
-      console.log('depositInfo totalReturned', depositInfo.totalReturned.toString());
-
-      if (!escrow) {
-        return null;
-      }
-      const claimable = depositInfo.totalFilled.sub(escrow.claimedToken);
-      console.log('claimable:', claimable.toString());
-
-      return {
-        escrow,
-        depositInfo,
-        claimable,
-      };
-    },
-    enabled: !!vault && !!publicKey,
-  });
+  const { publicKey } = useWallet();
 
   // mock 数据
   const { token: lpToken0, balance: lpToken0Balance } = useTokenInfo({
@@ -63,6 +30,49 @@ export function useAlphaVaultInfo() {
   const { token: offeringToken, balance: offeringTokenBalance } = useTokenInfo({
     mint: vault?.vault.baseMint,
     chainId: CLUSTER,
+  });
+
+  const { data: escrowInfo } = useQuery({
+    queryKey: ['vault', 'getEscrow', vault?.vault.totalEscrow, publicKey],
+    queryFn: async () => {
+      if (!vault || !publicKey || !offeringToken || !lpToken0) {
+        return null;
+      }
+      const escrow = await vault.getEscrow(publicKey);
+      console.log('escrow claimedToken:', escrow?.claimedToken.toString());
+      console.log('escrow totalDeposit:', escrow?.totalDeposit.toString());
+      // console.log('escrow lastClaimedPoint:', escrow?.lastClaimedPoint.toString());
+      // console.log('escrow maxCap:', escrow?.maxCap.toString());
+      // console.log('escrow vault:', escrow?.vault.toString());
+
+      const depositInfo = await vault.getDepositInfo(escrow);
+      console.log('depositInfo totalDeposit', depositInfo.totalDeposit.toString());
+      console.log('depositInfo totalFilled', depositInfo.totalFilled.toString());
+      console.log('depositInfo totalReturned', depositInfo.totalReturned.toString());
+
+      if (!escrow) {
+        return null;
+      }
+
+      // Number of base token = vault.boughtToken * escrow.totalDeposit / vault.totalDeposit
+      const baseToken = new BigNumber(vault.vault.boughtToken.toString())
+        .div(`1e${offeringToken.decimals}`)
+        .multipliedBy(new BigNumber(escrow.totalDeposit.toString()).div(`1e${lpToken0.decimals}`))
+        .div(new BigNumber(vault.vault.totalDeposit.toString()).div(`1e${lpToken0.decimals}`))
+        .dp(offeringToken.decimals, BigNumber.ROUND_DOWN);
+
+      console.log('baseToken:', baseToken.toString(), escrow.claimedToken.toString());
+      const claimable = baseToken.minus(
+        new BigNumber(escrow.claimedToken.toString()).div(`1e${offeringToken.decimals}`)
+      );
+
+      return {
+        escrow,
+        depositInfo,
+        claimable,
+      };
+    },
+    enabled: !!vault && !!publicKey,
   });
 
   const { data: lpToken0USD, isLoading: lpToken0USDLoading } = useCryptoPrice(lpToken0);
@@ -153,9 +163,13 @@ Time window in step 3 and 4 is fixed, cannot be modified through parameter
         )
       : new BigNumber(0),
     userOfferingAmountPool: escrowInfo
-      ? new BigNumber(escrowInfo?.claimable.toString()).div(`1e${offeringToken?.decimals}`)
+      ? new BigNumber(escrowInfo?.claimable.toString())
       : new BigNumber(0),
-    userRefundingAmountPool: new BigNumber(0),
+    userRefundingAmountPool: escrowInfo
+      ? new BigNumber(escrowInfo?.depositInfo.totalReturned.toString()).div(
+          `1e${lpToken0?.decimals}`
+        )
+      : new BigNumber(0),
   };
 
   return {

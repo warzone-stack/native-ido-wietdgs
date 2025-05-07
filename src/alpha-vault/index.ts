@@ -192,6 +192,50 @@ export class AlphaVault {
   }
 
   /**
+   * Withdraws the remaining quote from the vault.
+   *
+   * @param {PublicKey} owner - The public key of the owner's wallet.
+   * @return {Promise<Transaction>} A promise that resolves to the withdraw transaction.
+   */
+  public async withdrawRemainingQuote(owner: PublicKey) {
+    const [escrow] = deriveEscrow(this.pubkey, owner, this.program.programId);
+
+    const preInstructions: TransactionInstruction[] = [];
+    const { ataPubKey: destinationToken, ix: createDestinationTokenIx } =
+      await getOrCreateATAInstruction(
+        this.program.provider.connection,
+        this.vault.quoteMint,
+        owner
+      );
+    if (createDestinationTokenIx) {
+      preInstructions.push(createDestinationTokenIx);
+    }
+
+    const withdrawRemainingTx = await this.program.methods
+      .withdrawRemainingQuote()
+      .accounts({
+        vault: this.pubkey,
+        escrow,
+        owner,
+        destinationToken,
+        pool: this.vault.pool,
+        tokenVault: this.vault.tokenVault,
+        tokenMint: this.vault.quoteMint,
+        tokenProgram: TOKEN_PROGRAM_ID,
+      })
+      .preInstructions(preInstructions)
+      .transaction();
+
+    const { blockhash, lastValidBlockHeight } =
+      await this.program.provider.connection.getLatestBlockhash('confirmed');
+    return new Transaction({
+      blockhash,
+      lastValidBlockHeight,
+      feePayer: owner,
+    }).add(withdrawRemainingTx);
+  }
+
+  /**
    * Claims bought token from the vault.
    *
    * @param {PublicKey} owner - The public key of the owner's wallet.
