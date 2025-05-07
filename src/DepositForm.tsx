@@ -74,6 +74,7 @@ export const DepositForm = ({ contractInfo, setIsDepositing }: DepositFormProps)
     },
     onSuccess: () => {
       refetchVault();
+      setIsDepositing(false);
     },
     onError: (error) => {
       console.error('Deposit error', error);
