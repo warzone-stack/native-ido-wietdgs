@@ -15,7 +15,7 @@ export type IDOStatus = 'not_started' | 'in_progress' | 'ended';
 // CONFIG
 // https://solscan.io/tx/2RueuEtqn9VbNmpN2UQmW5whPn4PH7A8SBq77CLKjZkMsDqTieLgP2ScofpTZpoMFLaW58iDEkXGX1JphJ4jt6xb?cluster=devnet
 const totalTokensOffered = new BigNumber(100);
-const activation_point = 1746615900;
+const activation_point = 1746626100;
 
 export function useAlphaVaultInfo() {
   const { vault } = useContext(VaultContext);
