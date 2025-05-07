@@ -33,7 +33,7 @@ export function useAlphaVaultInfo() {
   });
 
   const { data: escrowInfo } = useQuery({
-    queryKey: ['vault', 'getEscrow', vault?.vault.totalEscrow, publicKey, offeringToken, lpToken0],
+    queryKey: ['vault', 'getEscrow', vault?.vault.boughtToken, publicKey, offeringToken, lpToken0],
     queryFn: async () => {
       if (!vault || !publicKey || !offeringToken || !lpToken0) {
         return null;
@@ -41,9 +41,9 @@ export function useAlphaVaultInfo() {
       const escrow = await vault.getEscrow(publicKey);
       console.log('escrow claimedToken:', escrow?.claimedToken.toString());
       console.log('escrow totalDeposit:', escrow?.totalDeposit.toString());
-      // console.log('escrow lastClaimedPoint:', escrow?.lastClaimedPoint.toString());
-      // console.log('escrow maxCap:', escrow?.maxCap.toString());
-      // console.log('escrow vault:', escrow?.vault.toString());
+      console.log('escrow lastClaimedPoint:', escrow?.lastClaimedPoint.toString());
+      console.log('escrow maxCap:', escrow?.maxCap.toString());
+      console.log('escrow refunded:', escrow?.refunded);
 
       const depositInfo = await vault.getDepositInfo(escrow);
       console.log('depositInfo totalDeposit', depositInfo.totalDeposit.toString());
@@ -68,7 +68,11 @@ export function useAlphaVaultInfo() {
 
       return {
         escrow,
-        depositInfo,
+        depositInfo: {
+          totalDeposit: depositInfo.totalDeposit,
+          totalFilled: depositInfo.totalFilled,
+          totalReturned: escrow.refunded === 1 ? BN.fromNumber(0) : depositInfo.totalReturned,
+        },
         claimable,
       };
     },
