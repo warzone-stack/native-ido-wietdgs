@@ -32,7 +32,7 @@ function AppContent() {
 
   return (
     <>
-      <div className='max-h-screen min-w-[450px]  overflow-y-auto'>
+      <div className='min-w-[450px] overflow-y-auto'>
         <Header />
         <main className='px-4 md:px-5 mt-5 pb-10'>
           <div
