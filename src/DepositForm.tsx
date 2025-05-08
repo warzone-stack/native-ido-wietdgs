@@ -231,7 +231,7 @@ export const DepositForm = ({ contractInfo, setIsDepositing }: DepositFormProps)
                 className='text-xs hover:opacity-50'
                 onClick={() => {
                   if (contractInfo.lpToken0Balance) {
-                    setDepositAmount(contractInfo.lpToken0Balance.toString());
+                    setDepositAmount(Math.min(contractInfo.lpToken0Balance.toNumber(),depositCap ? depositCap.minus(contractInfo.userInfo.amountPool).toNumber():0).toString());
                   }
                 }}
               >
