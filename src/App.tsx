@@ -7,6 +7,8 @@ import { Header } from './components/Header';
 import { TokenLogo } from './components/TokenLogo';
 import { formatTokenAmount } from './config/number';
 import { SOCIAL_LINKS } from './config/site';
+import { config } from './config/wagmi';
+import { useIsOKXWallet } from './config/web3';
 import { DepositForm } from './DepositForm';
 import { useAlphaVaultInfo } from './hooks/useAlphaVaultInfo';
 import { VaultProvider } from './solana/VaultProvider';
@@ -25,11 +27,7 @@ function AppContent() {
       ? (Number(contractInfo.endTimestamp - contractInfo.startTimestamp) / 3600).toFixed(2)
       : undefined;
 
-  // Backpack
-  // OKX Wallet
-  // const isOKX = wallet?.adapter.name === 'Backpack';
-  const isOKX = true;
-
+  const isOKX = useIsOKXWallet();
   return (
     <>
       <div className='min-w-[430px] overflow-y-auto'>
