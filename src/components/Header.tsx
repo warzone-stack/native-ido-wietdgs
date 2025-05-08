@@ -12,7 +12,7 @@ export function Header() {
       <div className='container mx-auto px-10 h-[68px] flex items-center justify-between'>
         {/* Logo */}
         <Link to='/' className='flex items-center space-x-2'>
-          <img src='/logo.png' alt='DEX Logo' className='h-[46px] w-[126px]' />
+          <img src='/logo-with-word.svg' alt='DEX Logo' className='h-[46px] w-[126px]' />
         </Link>
 
         {/* Wallet Connect Button and Theme Toggle */}

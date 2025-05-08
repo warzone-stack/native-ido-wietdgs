@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 import { ClaimForm } from './ClaimForm';
 import { ConnectOKXButton } from './components/ConnectButton';
 import { Countdown } from './components/Countdown';
@@ -13,6 +13,7 @@ import { DepositForm } from './DepositForm';
 import { useAlphaVaultInfo } from './hooks/useAlphaVaultInfo';
 import { VaultProvider } from './solana/VaultProvider';
 import { SolanaWalletContextProvider } from './solana/WalletProvider';
+import { VaultContext } from './solana/VaultContext';
 
 const queryClient = new QueryClient();
 
@@ -28,6 +29,8 @@ function AppContent() {
       : undefined;
 
   const isOKX = useIsOKXWallet();
+  const { depositCap } = useContext(VaultContext);
+
   return (
     <>
       <div className='min-w-[430px] overflow-y-auto'>
@@ -42,6 +45,11 @@ function AppContent() {
               <>
                 <div className='w-full min-h-[120px] rounded-lg bg-[url("/images/banner.png")] bg-cover bg-center bg-no-repeat' />
 
+                {!depositCap && <div className='flex flex-col gap-[10px] items-center p-4 rounded-lg'>
+                  <div className='flex items-center justify-center gap-[2px] text-sm font-medium'>
+                   The connected wallet has not been whitelisted to participate in this campaign.
+                  </div>
+                </div>}
                 {contractInfo.status === 'ended' ? (
                   contractInfo.claimStartTimestamp > contractInfo.now ? (
                     <Countdown
@@ -101,7 +109,7 @@ function AppContent() {
                           <button
                             onClick={() => setIsDepositing(true)}
                             className='min-h-12 min-w-[80px] md:min-w-[160px] btn-primary text-base font-semibold px-2 md:px-12'
-                            disabled={!isOKX}
+                            disabled={!isOKX || !depositCap}
                           >
                             Deposit
                           </button>
